@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
+from drive.models import UserProfile
 
 # Sign-up View
 def signup_view(request):
@@ -12,6 +13,7 @@ def signup_view(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
+            UserProfile.objects.create(user=user) 
             messages.success(request, 'Account created successfully! Please login.')
             return redirect('login')  # Redirect to login after signup
         else:
