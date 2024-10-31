@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Notifications - SkyVault</title>{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'notifications/notifications.css' %}">
+{% endblock %}
+{% block content %}
+<h2>Notifications</h2>
+<ul>
+    {% for notification in notifications %}
+        <li>{{ notification.message }} - {{ notification.created_at }}
+            <a href="{% url 'mark_as_read' notification.id %}">Mark as Read</a>
+        </li>
+    {% empty %}
+        <li>No new notifications.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!-- accounts/templates/accounts/register.html -->
+{% load static %}
+
+{% block title %}
+    <title>Register - SkyVault</title>
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="register">
+        <h2>Register</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+    </div>
+{% endblock %}
+

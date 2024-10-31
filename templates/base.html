@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkyVault{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+
+    <!-- Link to Material Icons and Base CSS -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'base.css' %}">
+
+    <!-- Placeholder for Additional CSS Files from Individual Apps -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar Navigation (Collapsible on Small Screens) -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="{% static 'images/logo.jpg' %}" alt="SkyVault Logo" class="logo-image">
+        </div>
+        <ul>
+            <li><a href="{% url 'vault_home' %}"><span class="material-icons">folder</span> My Drive</a></li>
+            <li><a href="{% url 'dashboard' %}"><span class="material-icons">dashboard</span> Dashboard</a></li>
+            <li><a href="{% url 'notification_list' %}"><span class="material-icons">notifications</span> Notifications</a></li>
+            <li><a href="{% url 'shared_view' %}"><span class="material-icons">people</span> Shared with me</a></li>
+            <li><a href="{% url 'recent_files' %}"><span class="material-icons">access_time</span> Recent</a></li>
+            <li><a href="{% url 'starred_files' %}"><span class="material-icons">star</span> Starred</a></li>
+            <li><a href="{% url 'trash_view' %}"><span class="material-icons">delete</span> Trash</a></li>
+            <li><a href="{% url 'storage_info' %}"><span class="material-icons">cloud</span> Storage</a></li>
+        </ul>
+        <div class="storage-info">
+            <p>Used: {{ user_profile.used_space }} MB of 100 MB</p>
+            <progress value="{{ user_profile.used_space }}" max="100"></progress>
+            <button>Get more storage</button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Top Bar with Profile, Search, and Hamburger Icon -->
+        <div class="top-bar">
+            <span class="material-icons hamburger" onclick="toggleSidebar()">menu</span>
+            <input type="text" placeholder="Search in Drive" class="search-input">
+            <div class="profile">
+              <a href="{% url 'profile_view' %}">
+                  <span>{{ user.username }}</span>
+                  {% if user_profile.profile_picture %}
+                      <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="avatar">
+                  {% else %}
+                      <span class="material-icons avatar">account_circle</span>
+                  {% endif %}
+              </a>
+              <a href="{% url 'update_profile_view' %}">
+                  <span class="material-icons">settings</span>
+              </a>
+          </div>
+        </div>
+
+        <!-- Content Block -->
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Placeholder for Extra JavaScript (if needed) -->
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("collapsed");
+        }
+    </script>
+</body>
+</html>

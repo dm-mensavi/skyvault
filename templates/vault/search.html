@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="vault-container">
+    <h2>Search Results for "{{ query }}"</h2>
+    <div class="file-grid">
+        {% for file in results %}
+        <div class="file-card">
+            <span class="material-icons">insert_drive_file</span>
+            <p>{{ file.name }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

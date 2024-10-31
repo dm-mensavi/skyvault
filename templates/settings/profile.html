@@ -1,0 +1,20 @@
+<!-- settings/templates/settings/profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<h2>{{ user.username }}'s Profile</h2>
+<div class="profile-info">
+    {% if user_profile.profile_picture %}
+        <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="avatar">
+    {% else %}
+        <span class="material-icons avatar">account_circle</span>
+    {% endif %}
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Bio:</strong> {{ user_profile.bio }}</p>
+</div>
+<a href="{% url 'update_profile_view' %}" class="button">Update Profile</a>
+{% endblock %}

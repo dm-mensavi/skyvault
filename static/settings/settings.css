@@ -1,0 +1,14 @@
+/* static/settings/settings.css */
+.profile-info {
+  text-align: center;
+}
+
+.profile-info img {
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+}
+
+.profile-info h2 {
+  color: #555;
+}

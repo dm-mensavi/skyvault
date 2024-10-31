@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shared Files - Vault{% endblock %}
+
+{% block content %}
+<div class="vault-container">
+    <h2>Shared Files</h2>
+    <div class="file-grid">
+        {% for file in shared_files %}
+        <div class="file-card">
+            <span class="material-icons">folder_shared</span>
+            <p>{{ file.name }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

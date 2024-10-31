@@ -1,0 +1,27 @@
+<!-- dashboard/templates/dashboard/dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - SkyVault{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+    <h2>Dashboard</h2>
+    <div class="dashboard-summary">
+        <div>
+            <h3>Storage Used</h3>
+            <p>50 MB of 100 MB</p>
+        </div>
+        <div>
+            <h3>Files Uploaded</h3>
+            <p>20 files</p>
+        </div>
+        <div>
+            <h3>File Types</h3>
+            <p>Images: 10, Documents: 5, Videos: 3, Audio: 2</p>
+        </div>
+    </div>
+{% endblock %}

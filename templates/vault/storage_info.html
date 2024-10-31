@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Storage Info{% endblock %}
+
+{% block content %}
+<h2>Storage Information</h2>
+<p>Total Storage Used: {{ total_storage|floatformat:2 }} MB</p>
+<p>Max Storage: {{ max_storage }} MB</p>
+<p>Used: {{ used_percentage|floatformat:2 }}%</p>
+<progress value="{{ used_percentage }}" max="100"></progress>
+{% endblock %}

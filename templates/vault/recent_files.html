@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Recent Files{% endblock %}
+
+{% block content %}
+<h2>Recent Files</h2>
+<div class="file-list">
+    {% for file in files %}
+        <div class="file-item">
+            <p>{{ file.name }}</p>
+        </div>
+    {% empty %}
+        <p>No recent files available.</p>
+    {% endfor %}
+</div>
+{% endblock %}
