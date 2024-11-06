@@ -336,9 +336,10 @@ body {
   background-color: #ffffff;
   border: 1px solid #ddd;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 7px;
   z-index: 1000;
-  min-width: 120px;
+  min-width: 160px;
+  padding: 10px 5px;
 }
 
 .context-menu.active {
@@ -354,6 +355,39 @@ body {
 
 .context-menu-item:hover {
   background-color: #e8f0fe;
+}
+
+.message-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  z-index: 1000;
+}
+
+.alert {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.alert-success {
+  background-color: #4caf50;
+}
+
+.alert-error {
+  background-color: #f44336;
+}
+
+.alert-info {
+  background-color: #2196f3;
+}
+
+.alert-warning {
+  background-color: #ff9800;
 }
 
 

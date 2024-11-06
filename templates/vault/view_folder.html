@@ -28,7 +28,27 @@
         </form>
     </div>
 
+    {% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     <!-- Include the file grid for displaying folders and files within this folder -->
     {% include "vault/_file_grid.html" with folders=subfolders files=files %}
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      setTimeout(function() {
+          let messages = document.querySelectorAll(".alert");
+          messages.forEach(function(message) {
+              message.style.display = "none";
+          });
+      }, 5000); // Adjust time as needed (5000 ms = 5 seconds)
+  });
+</script>
 {% endblock %}
+
+

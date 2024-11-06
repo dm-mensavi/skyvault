@@ -1,3 +1,4 @@
+from django.http import FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -37,8 +38,8 @@ def upload_file(request):
 
     # Check if a file with the same name already exists in the selected folder
     if File.objects.filter(user=request.user, name=uploaded_file.name, folder=folder).exists():
-        messages.error(request, "A file with this name already exists in the selected folder.")
-        return redirect('vault_home')
+        messages.error(request, "File already exists in the selected folder.")
+        return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
 
     # Save the file and update user's used storage space
     File.objects.create(
@@ -52,8 +53,7 @@ def upload_file(request):
     user_profile.save()
 
     messages.success(request, "File uploaded successfully!")
-    return redirect('vault_home')
-
+    return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
 
 
 @login_required
@@ -63,17 +63,28 @@ def create_folder(request):
 
     folder_name = request.POST.get('folder_name')
     parent_folder_id = request.POST.get('parent_folder_id')
-    parent_folder = Folder.objects.filter(id=parent_folder_id, user=request.user).first() if parent_folder_id else None
 
+    # Retrieve the parent folder if provided
+    parent_folder = None
+    if parent_folder_id:
+        parent_folder = get_object_or_404(Folder, id=parent_folder_id, user=request.user)
+
+    # Check if folder name is provided
     if not folder_name:
         messages.error(request, "Folder name cannot be empty.")
-        return redirect('vault_home')
+        return redirect('view_folder', folder_id=parent_folder_id) if parent_folder else redirect('vault_home')
 
+    # Check for duplicate folder names within the same parent folder
+    if Folder.objects.filter(user=request.user, name=folder_name, parent_folder=parent_folder).exists():
+        messages.error(request, "Folder name already exists. Please choose a different name.")
+        return redirect('view_folder', folder_id=parent_folder_id) if parent_folder else redirect('vault_home')
+
+    # Create and save the folder
     Folder.objects.create(user=request.user, name=folder_name, parent_folder=parent_folder)
     messages.success(request, "Folder created successfully!")
-    
-    return redirect('view_folder' if parent_folder else 'vault_home', folder_id=parent_folder_id)
 
+    # Redirect to the appropriate view
+    return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
 
 
 @login_required
@@ -87,6 +98,25 @@ def view_folder(request, folder_id):
         'subfolders': subfolders,
         'files': files,
     })
+
+@login_required
+def open_file(request, file_id):
+    file_instance = get_object_or_404(File, id=file_id, user=request.user)
+
+    # Determine file type from extension
+    file_extension = file_instance.uploaded_file.name.split('.')[-1].lower()
+    
+    # If the file is an image or text, try displaying it directly
+    if file_extension in ['jpg', 'jpeg', 'png', 'gif']:
+        return FileResponse(file_instance.uploaded_file.open(), content_type=f'image/{file_extension}')
+    
+    elif file_extension in ['txt', 'pdf']:
+        return FileResponse(file_instance.uploaded_file.open(), content_type='application/pdf' if file_extension == 'pdf' else 'text/plain')
+
+    # For other file types, prompt download
+    response = FileResponse(file_instance.uploaded_file.open(), as_attachment=True)
+    response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
+    return response
 
 
 @login_required
