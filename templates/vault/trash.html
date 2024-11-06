@@ -1,22 +1,139 @@
-{% extends 'base.html' %}
-{% load static %}
+<!-- templates/vault/trash.html -->
 
-{% block title %}
- Trash - Vault
-{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-<div class="vault-container">
-    <h2>Trash</h2>
-    <div class="file-grid">
-        {% for file in trashed_files %}
-        <div class="file-card">
-            <span class="material-icons">insert_drive_file</span>
-            <p>{{ file.name }}</p>
-            <a href="{% url 'file_restore' file.id %}" class="material-icons">restore</a>
-            <a href="{% url 'file_delete_permanent' file.id %}" class="material-icons">delete_forever</a>
+  <h2>Trash</h2>
+
+  <!-- Folder Section -->
+  <h3>Folders</h3>
+  <div class="drive-container">
+      {% if trashed_folders %}
+          {% for folder in trashed_folders %}
+              <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
+                  <p class="file-item-name">{{ folder.name }}</p>
+                  <div class="actions">
+                      <button class="restore-btn" onclick="handleRestore('{{ folder.id }}', 'folder')">Restore</button>
+                      <button class="delete-btn" onclick="handlePermanentDelete('{{ folder.id }}', 'folder')">Delete</button>
+                  </div>
+              </div>
+          {% endfor %}
+      {% else %}
+          <p class="trash-empty-message">No folders in trash.</p>
+      {% endif %}
+  </div>
+
+  <!-- File Section -->
+  <h3>Files</h3>
+  <div class="drive-container">
+      {% if trashed_files %}
+          {% for file in trashed_files %}
+              <div class="file-item" data-id="{{ file.id }}" data-type="file">
+                  <p class="file-item-name">{{ file.name }}</p>
+                  <div class="actions">
+                      <button class="restore-btn" onclick="handleRestore('{{ file.id }}', 'file')">Restore</button>
+                      <button class="delete-btn" onclick="handlePermanentDelete('{{ file.id }}', 'file')">Delete</button>
+                  </div>
+              </div>
+          {% endfor %}
+      {% else %}
+          <p class="trash-empty-message">No files in trash.</p>
+      {% endif %}
+  </div>
+  <!-- Custom Confirmation Modal -->
+<div id="confirmationModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <p id="confirmationMessage"></p>
+        <div class="modal-actions">
+            <button id="confirmButton" class="modal-button delete-button">OK</button>
+            <button onclick="closeModal()" class="modal-button">Cancel</button>
         </div>
-        {% endfor %}
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+   // CSRF token
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+let actionType, itemId, itemType;  // Variables to store action context
+
+// Function to open the custom modal
+function openModal(message, onConfirm) {
+    document.getElementById('confirmationMessage').textContent = message;
+    document.getElementById('confirmButton').onclick = onConfirm;
+    document.getElementById('confirmationModal').style.display = 'block';
+}
+
+// Function to close the custom modal
+function closeModal() {
+    document.getElementById('confirmationModal').style.display = 'none';
+}
+
+// Handle Restore Action
+function handleRestore(id, type) {
+    actionType = 'restore';
+    itemId = id;
+    itemType = type;
+    openModal(`Are you sure you want to restore this ${type}?`, confirmAction);
+}
+
+// Handle Permanent Delete Action
+function handlePermanentDelete(id, type) {
+    actionType = 'delete';
+    itemId = id;
+    itemType = type;
+    openModal(`Are you sure you want to permanently delete this ${type}?`, confirmAction);
+}
+
+// Execute the confirmed action
+function confirmAction() {
+    closeModal();
+    if (actionType === 'restore') {
+        fetch(`/vault/restore/${itemType}/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} restored successfully.`);
+                location.reload();
+            } else {
+                alert(`Error restoring ${itemType}.`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while restoring.');
+        });
+    } else if (actionType === 'delete') {
+        fetch(`/vault/delete-permanent/${itemType}/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} permanently deleted.`);
+                location.reload();
+            } else {
+                alert(`Error deleting ${itemType}.`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting.');
+        });
+    }
+}
+</script>
 {% endblock %}

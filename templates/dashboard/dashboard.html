@@ -1,27 +1,127 @@
-<!-- dashboard/templates/dashboard/dashboard.html -->
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Dashboard - SkyVault{% endblock %}
-
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
-{% endblock %}
 
 {% block content %}
-    <h2>Dashboard</h2>
-    <div class="dashboard-summary">
-        <div>
-            <h3>Storage Used</h3>
-            <p>50 MB of 100 MB</p>
+    <h2>File Drive Statistics</h2>
+
+    <div style="display: flex; gap: 20px;">
+        <div style="width: 50%;">
+            <h3>File Type Distribution</h3>
+            <canvas id="fileTypeChart"></canvas>
         </div>
-        <div>
-            <h3>Files Uploaded</h3>
-            <p>20 files</p>
-        </div>
-        <div>
-            <h3>File Types</h3>
-            <p>Images: 10, Documents: 5, Videos: 3, Audio: 2</p>
+        <div style="width: 50%;">
+            <h3>Storage Usage Over Time (GB)</h3>
+            <canvas id="storageUsageChart"></canvas>
         </div>
     </div>
+
+{% endblock %}
+{% block extra_js %}
+<!-- Include Chart.js and Date Adapter -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+
+<script>
+    // Function to render the File Type Distribution Bar Chart
+    function renderFileTypeChart(data) {
+        const labels = data.map(item => item.file_type);
+        const counts = data.map(item => item.count);
+
+        new Chart(document.getElementById("fileTypeChart"), {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Count",
+                    data: counts,
+                    backgroundColor: "rgba(75, 192, 192, 0.6)"
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true, // Enable legend display
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.dataset.label}: ${context.raw}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Function to render the Storage Usage Over Time Line Chart
+    function renderStorageUsageChart(data) {
+        const labels = data.usage_data.map(item => item.day);
+        const usage = data.usage_data.map(item => (item.cumulative_size / (1024 * 1024)).toFixed(2)); // Convert to MB
+        const quota = new Array(labels.length).fill(data.storage_quota / (1024 * 1024)); // Convert 100 MB quota to MB
+
+        new Chart(document.getElementById("storageUsageChart"), {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Cumulative Storage Used (MB)",
+                        data: usage,
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        backgroundColor: "rgba(54, 162, 235, 0.2)",
+                        fill: true
+                    },
+                    {
+                        label: "Storage Quota (100 MB)",
+                        data: quota,
+                        borderColor: "rgba(255, 99, 132, 1)",
+                        backgroundColor: "rgba(255, 99, 132, 0.2)",
+                        borderDash: [5, 5], // Dashed line for quota
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100 // Set max to 100 MB for clear representation
+                    },
+                    x: {
+                        type: 'time', // Use 'time' scale
+                        time: {
+                            unit: 'day', // Display dates by day
+                            tooltipFormat: 'MMM dd' // Tooltip date format
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Fetch and Render File Type Distribution Chart
+    fetch("{% url 'file_type_distribution' %}")
+        .then(response => response.json())
+        .then(data => {
+            console.log("File Type Distribution Data:", data); // Log data to console
+            renderFileTypeChart(data);
+        })
+        .catch(error => console.error("Error fetching file type distribution data:", error));
+
+    // Fetch and Render Storage Usage Over Time Chart
+    fetch("{% url 'storage_usage_over_time' %}")
+        .then(response => response.json())
+        .then(data => {
+            console.log("Storage Usage Data:", data); // Log data to console
+            renderStorageUsageChart(data);
+        })
+        .catch(error => console.error("Error fetching storage usage data:", error));
+</script>
 {% endblock %}

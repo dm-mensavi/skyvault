@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class Folder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    trashed = models.BooleanField(default=False)
     parent_folder = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subfolders')
     created_at = models.DateTimeField(auto_now_add=True)
 

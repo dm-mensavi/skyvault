@@ -4,8 +4,78 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import File, Folder
 from .forms import *
+from django.http import JsonResponse
+from django.core.files.base import ContentFile
+import json
 
-from django.shortcuts import get_object_or_404
+# views.py
+@login_required
+def delete_file(request, file_id):
+    if request.method == 'POST':
+        file_instance = get_object_or_404(File, id=file_id, user=request.user)
+        # Move the file to trash
+        file_instance.trashed = True
+        file_instance.save()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+@login_required
+def delete_folder(request, folder_id):
+    if request.method == 'POST':
+        folder_instance = get_object_or_404(Folder, id=folder_id, user=request.user)
+        # Cascade move to trash
+        def move_folder_to_trash(folder):
+            folder.trashed = True
+            folder.save()
+            # Move all files in this folder to trash
+            files = folder.files.all()
+            for file in files:
+                file.trashed = True
+                file.save()
+            # Recursively move subfolders to trash
+            subfolders = folder.subfolders.all()
+            for subfolder in subfolders:
+                move_folder_to_trash(subfolder)
+
+        move_folder_to_trash(folder_instance)
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+
+
+# Restore a file or folder
+def restore_item(request, item_type, item_id):
+    if request.method == 'POST':
+        if item_type == 'folder':
+            item = get_object_or_404(Folder, id=item_id, is_trashed=True)
+        elif item_type == 'file':
+            item = get_object_or_404(File, id=item_id, is_trashed=True)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid item type'})
+
+        item.is_trashed = False
+        item.save()
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+# Permanently delete a file or folder
+def delete_permanent_item(request, item_type, item_id):
+    if request.method == 'POST':
+        if item_type == 'folder':
+            item = get_object_or_404(Folder, id=item_id, is_trashed=True)
+        elif item_type == 'file':
+            item = get_object_or_404(File, id=item_id, is_trashed=True)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid item type'})
+
+        item.delete()
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 
 @login_required
 def upload_file(request):
@@ -89,9 +159,9 @@ def create_folder(request):
 
 @login_required
 def view_folder(request, folder_id):
-    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-    subfolders = folder.subfolders.all()  # Retrieve subfolders within this folder
-    files = folder.files.all()            # Retrieve files within this folder
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user, trashed=False)
+    subfolders = folder.subfolders.filter(trashed=False)
+    files = folder.files.filter(trashed=False)         # Retrieve files within this folder
 
     return render(request, 'vault/view_folder.html', {
         'folder': folder,
@@ -120,10 +190,118 @@ def open_file(request, file_id):
 
 
 @login_required
-def vault_home(request):
-    folders = Folder.objects.filter(user=request.user)
-    files = File.objects.filter(user=request.user, trashed=False)
+def paste(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        item_id = data.get("item_id")
+        item_type = data.get("item_type")
+        action = data.get("action")
+        target_folder_id = data.get("target_folder")
 
+        print("Paste action data received:", data)  # Debug print
+
+        # Get the target folder
+        if target_folder_id:
+            target_folder = get_object_or_404(Folder, id=target_folder_id, user=request.user)
+        else:
+            target_folder = None  # Root folder
+
+        if item_type == "file":
+            item = get_object_or_404(File, id=item_id, user=request.user)
+            if action == "copy":
+                # Open the uploaded file and read its content
+                item.uploaded_file.open()
+                file_content = item.uploaded_file.read()
+                item.uploaded_file.close()
+
+                # Create a new file instance
+                new_file = File.objects.create(
+                    user=request.user,
+                    name=item.name,
+                    folder=target_folder,
+                    size=item.size,
+                    trashed=item.trashed,
+                    starred=item.starred,
+                    # Copy other necessary fields
+                )
+                new_file.uploaded_file.save(item.uploaded_file.name, ContentFile(file_content))
+                new_file.save()
+                message = "File copied successfully!"
+                print(message)  # Debug print
+
+            elif action == "cut":
+                # Move the file to the target folder
+                print(f"Before moving: File {item.id} in folder {item.folder_id}")
+                item.folder = target_folder
+                item.save()
+                print(f"After moving: File {item.id} in folder {item.folder_id}")
+                message = "File moved successfully!"
+                print(message)  # Debug print
+
+            else:
+                return JsonResponse({"success": False, "message": "Invalid action"}, status=400)
+
+        elif item_type == "folder":
+            item = get_object_or_404(Folder, id=item_id, user=request.user)
+            if action == "copy":
+                # Recursive function to copy folders and their contents
+                def copy_folder(folder_to_copy, parent_folder):
+                    new_folder = Folder.objects.create(
+                        user=request.user,
+                        name=folder_to_copy.name + " (Copy)",
+                        parent_folder=parent_folder
+                    )
+                    # Copy files in this folder
+                    files = File.objects.filter(folder=folder_to_copy)
+                    for file in files:
+                        file.uploaded_file.open()
+                        file_content = file.uploaded_file.read()
+                        file.uploaded_file.close()
+
+                        new_file = File.objects.create(
+                            user=request.user,
+                            name=file.name,
+                            folder=new_folder,
+                            size=file.size,
+                            trashed=file.trashed,
+                            starred=file.starred,
+                            # Copy other necessary fields
+                        )
+                        new_file.uploaded_file.save(file.uploaded_file.name, ContentFile(file_content))
+                        new_file.save()
+                    # Recursively copy subfolders
+                    subfolders = Folder.objects.filter(parent_folder=folder_to_copy)
+                    for subfolder in subfolders:
+                        copy_folder(subfolder, new_folder)
+                    return new_folder
+
+                copy_folder(item, target_folder)
+                message = "Folder copied successfully!"
+                print(message)  # Debug print
+
+            elif action == "cut":
+                # Move the folder to the target location
+                item.parent_folder = target_folder
+                item.save()
+                message = "Folder moved successfully!"
+                print(message)  # Debug print
+
+            else:
+                return JsonResponse({"success": False, "message": "Invalid action"}, status=400)
+
+        else:
+            return JsonResponse({"success": False, "message": "Invalid item type"}, status=400)
+
+        return JsonResponse({"success": True, "message": message})
+    else:
+        return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+
+
+@login_required
+def vault_home(request):
+    folders = Folder.objects.filter(user=request.user, parent_folder__isnull=True, trashed=False)
+    files = File.objects.filter(user=request.user, folder__isnull=True, trashed=False)
+    
     if request.method == "POST":
         if 'folder_name' in request.POST:
             folder_form = FolderForm(request.POST)
@@ -161,8 +339,12 @@ def vault_home(request):
     
 @login_required
 def trash_view(request):
+    trashed_folders = Folder.objects.filter(user=request.user, trashed=True)
     trashed_files = File.objects.filter(user=request.user, trashed=True)
-    return render(request, 'vault/trash.html', {'trashed_files': trashed_files})
+    return render(request, 'vault/trash.html', {
+        'trashed_folders': trashed_folders,
+        'trashed_files': trashed_files,
+    })
 
 @login_required
 def shared_view(request):

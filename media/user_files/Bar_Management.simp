@@ -1,0 +1,687 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<sim-project version="14.60" multi-file="no" uid="simp525d20711bdf471c988dfe91980fa032" creation-date="10/02/2024 11:42:16">
+  <meta>
+    <name>Bar Management</name>
+    <authors> MENSA~VI</authors>
+    <description>A bar management project from Java</description>
+  </meta>
+  <counters models="1">
+    <entity-names>
+      <counter>
+        <item-type type-id="package" type="Package" />
+        <value>4</value>
+      </counter>
+      <counter>
+        <item-type stereotype="interface" type-id="uml-interface-classifier" type="Interface" />
+        <value>1</value>
+      </counter>
+      <counter>
+        <item-type type-id="class" type="Class" />
+        <value>24</value>
+      </counter>
+      <counter>
+        <item-type type-id="data-type" type="Data Type" />
+        <value>1</value>
+      </counter>
+    </entity-names>
+    <entity-ids>
+      <counter>
+        <item-type type-id="package" type="Package" />
+        <value>5</value>
+      </counter>
+      <counter>
+        <item-type type-id="uml-interface-classifier" type="Interface" />
+        <value>2</value>
+      </counter>
+      <counter>
+        <item-type type-id="class" type="Class" />
+        <value>25</value>
+      </counter>
+      <counter>
+        <item-type type-id="property" type="Property" />
+        <value>47</value>
+      </counter>
+      <counter>
+        <item-type type-id="generalization" type="Generalization" />
+        <value>7</value>
+      </counter>
+      <counter>
+        <item-type type-id="data-type" type="Data Type" />
+        <value>2</value>
+      </counter>
+      <counter>
+        <item-type type-id="universal-connector" type="Universal Connector" />
+        <value>2</value>
+      </counter>
+    </entity-ids>
+    <diagrams>
+      <counter>
+        <type>SoftwareIdeasModeler.Core.Diagrams.UmlDiagrams.UmlClassDiagram</type>
+        <value>1</value>
+      </counter>
+    </diagrams>
+    <fields>
+      <counter>
+        <type>SoftwareIdeasModeler.Core.DiagramItems.Fields.OperationField</type>
+        <value>42</value>
+      </counter>
+    </fields>
+  </counters>
+  <alias-groups />
+  <management uid="md-1468f501c6e5404a8b595e88f157959d" name="" task-id-sequence="0">
+    <working-schedule uid="ws-6be8a67f485b4f3cb4513f60f3996b31" hours="8" monday="8" tuesday="8" wednesday="8" thursday="8" friday="8" saturday="0" sunday="0" />
+    <persons>
+      <person id="">
+        <first-name />
+        <last-name>MENSA~VI</last-name>
+        <role />
+        <e-mail />
+        <phone-number />
+        <description />
+        <color>#00000000</color>
+        <working-schedule uid="ws-d7f61b097d464dbc89b43af7143209f1" hours="8" monday="8" tuesday="8" wednesday="8" thursday="8" friday="8" saturday="0" sunday="0" />
+      </person>
+      <person id="">
+        <first-name />
+        <last-name>MENSA~VI</last-name>
+        <role />
+        <e-mail />
+        <phone-number />
+        <description />
+        <color>#00000000</color>
+      </person>
+    </persons>
+    <teams />
+    <sprints />
+    <projects />
+    <modules />
+    <tasks />
+    <to-dos />
+  </management>
+  <glossary id="glsr-7796d51c51c749b8ac067175947b4169" name="" order-index="-1" />
+  <types default="UML">
+    <type-sets>
+      <type-set file="UmlTypes.xml" />
+    </type-sets>
+    <custom-types>
+      <parameters />
+      <types>
+        <type id="int" name="int" />
+        <type id="List&lt;Team&gt;" name="List&lt;Team&gt;" />
+        <type id="Patronne" name="Patronne" />
+        <type id="SkillLevel" name="SkillLevel" />
+        <type id="void(overide)" name="void(overide)" />
+        <type id="double" name="double" />
+        <type id="Gender" name="Gender" />
+        <type id="Map&lt;Drink, Integer&gt;" name="Map&lt;Drink, Integer&gt;" />
+        <type id="Drink" name="Drink" />
+        <type id="Suit" name="Suit" />
+        <type id="Team" name="Team" />
+        <type id="List&lt;Card&gt;" name="List&lt;Card&gt;" />
+        <type id="void" name="void" />
+        <type id="List&lt;Player&gt;" name="List&lt;Player&gt;" />
+        <type id="List&lt;Human&gt;" name="List&lt;Human&gt;" />
+        <type id="Map&lt;Team, Integer&gt;" name="Map&lt;Team, Integer&gt;" />
+        <type id="void (Overide)" name="void (Overide)" />
+        <type id="List&lt;Clients&gt;" name="List&lt;Clients&gt;" />
+        <type id="Class:677367479c16422cbc773d1a98c4810f" name="Deck" class-ref="677367479c16422cbc773d1a98c4810f" />
+        <type id="Rank" name="Rank" />
+      </types>
+    </custom-types>
+  </types>
+  <items>
+    <item id="ed4e1bd7180d46beaa43892c6009849b" cid="PROP021" type="property" name="price" owner="bbe1e764939640bca14ab1c3cbfd5452" creator="" creation-date="10/02/2024 12:10:10" visibility="private">
+      <structural-feature type="double" type-id="double" />
+    </item>
+    <item id="bbe1e764939640bca14ab1c3cbfd5452" cid="C009" type="class" name="Drink" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:09:28" visibility="undefined">
+      <owned-items />
+      <attributes>
+        <attribute id="a9e1598780fbe4c3b861ece582eb2863f255" cid="PROP018" name="name" creation-date="10/02/2024 12:09:40" property-ref="70d53ef5a9894f189089696b6bd4758b" />
+        <attribute id="ad04b4e792acc409ea09f262d57cc9e26786" cid="PROP019" name="isAlcoholic" creation-date="10/02/2024 12:09:46" property-ref="274d85d3d573419689069a7fd55f2246" />
+        <attribute id="a1a32242b885c4b498534b5daa1ef4736179" cid="PROP020" name="alcoholPoints" creation-date="10/02/2024 12:10:01" property-ref="3e149176d62a4a539fa01742771793bc" />
+        <attribute id="a30a203e8f3014d199a6be1da8ae3e96d817" cid="PROP021" name="price" creation-date="10/02/2024 12:10:10" property-ref="ed4e1bd7180d46beaa43892c6009849b" />
+      </attributes>
+      <operations>
+        <operation id="o392db3e3bc6a4341af83e2e1b610dda9369" cid="OP021" name="getDrinkInfo" creation-date="10/02/2024 12:10:20" type="String" type-id="Uml.String" visibility="public" />
+      </operations>
+    </item>
+    <item id="3e149176d62a4a539fa01742771793bc" cid="PROP020" type="property" name="alcoholPoints" owner="bbe1e764939640bca14ab1c3cbfd5452" creator="" creation-date="10/02/2024 12:10:01" visibility="private">
+      <structural-feature type="Integer" type-id="Uml.Integer" />
+    </item>
+    <item id="70d53ef5a9894f189089696b6bd4758b" cid="PROP018" type="property" name="name" owner="bbe1e764939640bca14ab1c3cbfd5452" creator="" creation-date="10/02/2024 12:09:40" visibility="private">
+      <structural-feature type="String" type-id="Uml.String" />
+    </item>
+    <item id="274d85d3d573419689069a7fd55f2246" cid="PROP019" type="property" name="isAlcoholic" owner="bbe1e764939640bca14ab1c3cbfd5452" creator="" creation-date="10/02/2024 12:09:46" visibility="private">
+      <structural-feature type="Boolean" type-id="Uml.Boolean" />
+    </item>
+  </items>
+  <models>
+    <model id="pdfb390dbefb44784bdea027ae4c37539_683530769" name="Model1" namespace="" order-index="1">
+      <meta>
+        <authors>
+          <author> MENSA~VI</author>
+        </authors>
+        <description />
+        <creation-date>10/02/2024 11:43:02</creation-date>
+        <change-date>01/01/0001 00:00:00</change-date>
+        <revision-count>0</revision-count>
+        <version />
+      </meta>
+      <abstract-items />
+      <sub-models />
+      <diagram type="uml-class" id="pf7e303b0753c4cb781ca33a0fc1cbc92_861511014" name="ClassDiagram1" order-index="1" uid="" name-style="" auto-routed-paths="false" default-line-style="default" view-location="-1126,-141" zoom="0.2">
+        <style>
+          <background-color index="1" color="#FFFFFFFF" />
+          <background-color index="2" color="#FFFFFFFF" />
+          <background-type type="solid" />
+        </style>
+        <meta>
+          <authors>
+            <author> MENSA~VI</author>
+          </authors>
+          <description />
+          <creation-date>10/02/2024 11:43:02</creation-date>
+          <change-date>10/09/2024 11:16:12</change-date>
+          <revision-count>0</revision-count>
+          <version />
+        </meta>
+        <abstract-items>
+          <item id="93374caba02a492388d0af9cf2fdf303" cid="PKG002" type="package" name="Belote Card Game" creator="" creation-date="10/09/2024 10:31:52">
+            <owned-items />
+          </item>
+          <item id="034e66187ec74f9ab92c077a51615954" cid="PROP040" type="property" name="teamName" owner="ec719b8a56954642925d3fdcb266fb62" creator="" creation-date="10/09/2024 10:47:08" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="44118cffb9684567b35241c2250267bb" cid="C020" type="class" name="Class20" owner="5c72d7f5a2574ba3af3b97059c228e58" creator="" creation-date="10/09/2024 10:43:37" />
+          <item id="987cf14fcec94f769894c8053222c938" cid="PROP030" type="property" name="hand" owner="30499ae0ba544818bd2c997b2d1b75de" creator="" creation-date="10/09/2024 10:37:02" visibility="private">
+            <structural-feature type="List&lt;Card&gt;" type-id="List&lt;Card&gt;" />
+          </item>
+          <item id="a3a0af3ba5034c1a8f3f248202c18587" cid="C018" type="class" name="BeloteGame" owner="93374caba02a492388d0af9cf2fdf303" creator="" creation-date="10/09/2024 10:38:09">
+            <owned-items />
+            <attributes>
+              <attribute id="a81656a4195474a689e6116e141bef231604" cid="PROP032" name="players" creation-date="10/09/2024 10:38:16" property-ref="169ed076f4bd4a6590f6295498ec5a31" />
+              <attribute id="a257cb1b0e0a84838aec781ac765d11cd34" cid="PROP033" name="team1Score" creation-date="10/09/2024 10:38:33" property-ref="42da39fd6900450ea87023a25cfc42bf" />
+              <attribute id="a323f9dca4f47460abf77f1d73c46a261678" cid="PROP034" name="team2Score" creation-date="10/09/2024 10:38:43" property-ref="43854ae66a4142f5b010b129cdd1f5b3" />
+              <attribute id="a540965f14dd84648b29acc22e78f9f2096" cid="PROP035" name="deck" creation-date="10/09/2024 10:38:56" property-ref="5eb53613ca2141a9ae8c22e3749983cb" />
+            </attributes>
+            <operations>
+              <operation id="o4031726b09164193af5e458885b9fa2e406" cid="OP029" name="startGame" creation-date="10/09/2024 10:39:20" type="void" type-id="void" visibility="public" />
+              <operation id="o9ae54651b82547c0a1267f67493bc424169" cid="OP030" name="dealCards" creation-date="10/09/2024 10:39:33" type="void" type-id="void" visibility="public" />
+              <operation id="od2e91fe1e51d4fc0a1f1956e46567efe242" cid="OP031" name="playRound" creation-date="10/09/2024 10:39:47" type="void" type-id="void" visibility="public" />
+              <operation id="o1e99ff225d0046e4a6094ad2ccdda946156" cid="OP032" name="declareRound" creation-date="10/09/2024 10:40:07" type="void" type-id="void" visibility="public" />
+            </operations>
+          </item>
+          <item id="169ed076f4bd4a6590f6295498ec5a31" cid="PROP032" type="property" name="players" owner="a3a0af3ba5034c1a8f3f248202c18587" creator="" creation-date="10/09/2024 10:38:16" visibility="private">
+            <structural-feature type="List&lt;Player&gt;" type-id="List&lt;Player&gt;" />
+          </item>
+          <item id="f64d35313ddf4740980ad55819c622c0" cid="C003" type="class" name="Client" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:55:25" visibility="undefined">
+            <owned-items />
+            <attributes>
+              <attribute id="a936abc278bcb4754a8038338f25fdc8e480" cid="PROP006" name="favoriteDrink" creation-date="10/02/2024 11:55:40" property-ref="26bdd7d1e52141f884c806ba5948da31" />
+              <attribute id="a291a464fb61047dea368e7cc2c6f0f32258" cid="PROP007" name="backupDrink" creation-date="10/02/2024 11:56:43" property-ref="41d4fd7fef9a41bfba52335458c7cf90" />
+              <attribute id="a58570c829c984716b795fd654b117ea278" cid="PROP008" name="alcoholLevel" creation-date="10/02/2024 11:57:05" property-ref="3b064680789a4307be18b9fe5ca8f763" />
+              <attribute id="a8c66e5bafaf74957aece15d7ed55aadc674" cid="PROP009" name="gender" creation-date="10/02/2024 11:57:28" property-ref="7033292f9911415cbbcc352ab6c0af2b" />
+              <attribute id="aec7d01eab74a4264b473107e418c49da479" cid="PROP010" name="canReceiveDrink" creation-date="10/02/2024 11:57:42" property-ref="72085872479c4dbda956ce1b3b756e07" />
+            </attributes>
+            <operations>
+              <operation id="ofdfb6756c538464bbd0781a9893802a963" cid="OP007" name="introduce" creation-date="10/02/2024 11:58:15" type="void (Overide)" type-id="void (Overide)" visibility="public" />
+              <operation id="ocb342a98023349f39954abe39eb5c993392" cid="OP008" name="receiveDrink" creation-date="10/02/2024 11:58:39" type="void" type-id="void" visibility="public" />
+            </operations>
+          </item>
+          <item id="857a036c202a4371b7e17c32b6d467cc" cid="PROP002" type="property" name="nickname" owner="c7b925b8b8904f4cbc48400a5ed04331" creator="" creation-date="10/02/2024 11:47:59" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="a83eea4d9dc24e4c93e54736f2be36dd" cid="PROP036" type="property" name="teams" owner="55430d64669f49d0bed4fd3a8e713804" creator="" creation-date="10/09/2024 10:44:18" visibility="private">
+            <structural-feature type="List&lt;Team&gt;" type-id="List&lt;Team&gt;" />
+          </item>
+          <item id="b367746d0cca404285d2d720c0db9911" cid="PROP046" type="property" name="stock" owner="5a822017ba2e4974b11ebbe688d04317" creator="" creation-date="10/09/2024 10:50:17" visibility="private">
+            <structural-feature type="Map&lt;Drink, Integer&gt;" type-id="Map&lt;Drink, Integer&gt;" />
+          </item>
+          <item id="130c13b24ba84da996dcab671b243841" cid="PROP005" type="property" name="significantShout" owner="c7b925b8b8904f4cbc48400a5ed04331" creator="" creation-date="10/02/2024 11:49:10" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="5eb53613ca2141a9ae8c22e3749983cb" cid="PROP035" type="property" name="deck" owner="a3a0af3ba5034c1a8f3f248202c18587" creator="" creation-date="10/09/2024 10:38:56" visibility="private">
+            <structural-feature type="Deck" type-id="Class:677367479c16422cbc773d1a98c4810f" />
+          </item>
+          <item id="ceddf4f6f3c34711a4cdfcec9078922a" cid="C006" type="class" name="Server" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:05:49" visibility="undefined">
+            <owned-items />
+            <attributes>
+              <attribute id="ac6d84be3ff6542988d5f8f751f5f832c226" cid="PROP016" name="strength" creation-date="10/02/2024 12:06:01" property-ref="3b780dceba5d4e779732015f07f55d24" />
+              <attribute id="af77c4b3ecced4e44a655c86af00ef59e573" cid="PROP017" name="charm" creation-date="10/02/2024 12:06:13" property-ref="32295629d4e9455c8e008678d96289da" />
+            </attributes>
+            <operations>
+              <operation id="oba5b4fad598d4299a44a379d017fbb3b841" cid="OP018" name="serve" creation-date="10/02/2024 12:06:22" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p289e849e5be0432c8eece60d8e2e4111" name="Client client" type="" type-id="" creation-date="10/02/2024 12:06:44" />
+                  <parameter id="p4b81de0e3ba444a0be3f56e54adc5db0" name="Drink drink" type="" type-id="" creation-date="10/02/2024 12:06:44" />
+                </parameters>
+              </operation>
+              <operation id="o9e6f891aa2e34a8dbb2e2e4fe1f5eca0495" cid="OP019" name="NewOperation2" creation-date="10/02/2024 12:06:44" type="" type-id="" visibility="public" />
+            </operations>
+          </item>
+          <item id="1873a6503daa44d38cc9d8e72f3f66b1" cid="C004" type="class" name="Bartender" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:59:23" visibility="undefined">
+            <owned-items />
+            <attributes>
+              <attribute id="a0e9fa8cdc8194519ac77850a745f15d0156" cid="PROP011" name="cashRegister" creation-date="10/02/2024 11:59:40" property-ref="6db24b0c20b74e47af4322c5cc6378d5" />
+              <attribute id="acca6401996dd4b92bf6378fc5b00dfca969" cid="PROP012" name="isServing" creation-date="10/02/2024 11:59:48" property-ref="3a61494411ec4437b524dcdaff382df3" />
+            </attributes>
+            <operations>
+              <operation id="oebb25941424544b48427dd7996ba7acd170" cid="OP009" name="manageStock" creation-date="10/02/2024 12:00:03" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p38354008ad524458a54eec4cba58f07a" name="Drink drink" type="" type-id="" creation-date="10/02/2024 12:00:43" />
+                  <parameter id="pda34468c08af4dc9b67b63308e9947a2" name="Int quantity" type="" type-id="" creation-date="10/02/2024 12:00:43" />
+                </parameters>
+              </operation>
+              <operation id="o3f124182023a4e4689812047f6248850346" cid="OP010" name="serveDrink" creation-date="10/02/2024 12:01:26" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p58d8c9ffbec5401a8f7f95980766c352" name="Client client" type="" type-id="" creation-date="10/02/2024 12:02:09" />
+                  <parameter id="p648b45334d844d4fbc6ede2b99c2dab7" name="Drink drink" type="" type-id="" creation-date="10/02/2024 12:02:09" />
+                </parameters>
+              </operation>
+              <operation id="o7ed4ec54d8714be2b2bd942388317e00674" cid="OP011" name="offerDrink" creation-date="10/02/2024 12:02:41" type="void (Overide)" type-id="void (Overide)" visibility="public">
+                <parameters>
+                  <parameter id="pe0db8481a12c446fb7b6380d65c8ed38" name="Human person" type="" type-id="" creation-date="10/02/2024 12:03:07" />
+                  <parameter id="p98d760635b9647488040139567de73eb" name="Drink drink" type="" type-id="" creation-date="10/02/2024 12:03:07" />
+                </parameters>
+              </operation>
+            </operations>
+          </item>
+          <item id="a63330ea2b04499d9ab0c6cdd03cc942" cid="GNR004" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:03:36" from="19be307463fc4622bf4c9b445ecfe07d" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="cfc17220758a4efa957a12968d744ed4" cid="C015" type="class" name="Card" owner="93374caba02a492388d0af9cf2fdf303" creator="" creation-date="10/09/2024 10:32:22">
+            <owned-items />
+            <attributes>
+              <attribute id="aa5d8d0aeb3364f1383329d4b624cf4be455" cid="PROP022" name="suit" creation-date="10/09/2024 10:32:30" property-ref="fa9fcefb78bd4e8cab3c85f7f148fce1" />
+              <attribute id="aa26cf57658eb4d968ccf8c68f638841a32" cid="PROP023" name="value" creation-date="10/09/2024 10:32:44" property-ref="bcfdfb16eca3481cb5b707e42fa3ffe3" />
+              <attribute id="a06883ff321944090b9e5fa724c2be9a9493" cid="PROP024" name="rank" creation-date="10/09/2024 10:32:52" property-ref="b2c9bd94a08d4ab380ecc2e8af390c97" />
+            </attributes>
+            <operations>
+              <operation id="o9b302e686b044da9afe5acbbd54abbdb0" cid="OP022" name="NewOperation1" creation-date="10/09/2024 10:33:02" type="" type-id="" visibility="public" />
+            </operations>
+          </item>
+          <item id="9ea4f23b6c394e608b07859f306ed3d4" cid="PROP044" type="property" name="staff" owner="5a822017ba2e4974b11ebbe688d04317" creator="" creation-date="10/09/2024 10:49:40" visibility="private">
+            <structural-feature type="List&lt;Human&gt;" type-id="List&lt;Human&gt;" />
+          </item>
+          <item id="7063f2b6df214f7b997c678568d55b49" cid="GNR002" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:55:25" from="f64d35313ddf4740980ad55819c622c0" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="3b064680789a4307be18b9fe5ca8f763" cid="PROP008" type="property" name="alcoholLevel" owner="f64d35313ddf4740980ad55819c622c0" creator="" creation-date="10/02/2024 11:57:05" visibility="private">
+            <structural-feature type="Integer" type-id="Uml.Integer" />
+          </item>
+          <item id="ed4c4138c53546a285c2e99c8b6f7eba" cid="PROP037" type="property" name="scoreBoard" owner="55430d64669f49d0bed4fd3a8e713804" creator="" creation-date="10/09/2024 10:44:29" visibility="private">
+            <structural-feature type="Map&lt;Team, Integer&gt;" type-id="Map&lt;Team, Integer&gt;" />
+          </item>
+          <item id="43854ae66a4142f5b010b129cdd1f5b3" cid="PROP034" type="property" name="team2Score" owner="a3a0af3ba5034c1a8f3f248202c18587" creator="" creation-date="10/09/2024 10:38:43" visibility="private">
+            <structural-feature type="int" type-id="int" />
+          </item>
+          <item id="10e30428409b42329728fc093bdec783" cid="PROP004" type="property" name="popularity" owner="c7b925b8b8904f4cbc48400a5ed04331" creator="" creation-date="10/02/2024 11:48:45" visibility="private">
+            <structural-feature type="Integer" type-id="Uml.Integer" />
+          </item>
+          <item id="44cbcf260286487ba40e311d96a45d68" cid="C019" type="class" name="Class19" owner="5c72d7f5a2574ba3af3b97059c228e58" creator="" creation-date="10/09/2024 10:43:23" />
+          <item id="7bdc6d71858149fe919f2adc60202c33" cid="GNR001" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:46:03" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="e4a3dfa90c0d4ee6a4bdc6e4f72c8920" cid="PROP038" type="property" name="isOngoing" owner="55430d64669f49d0bed4fd3a8e713804" creator="" creation-date="10/09/2024 10:44:47" visibility="private">
+            <structural-feature type="Boolean" type-id="Uml.Boolean" />
+          </item>
+          <item id="65d05336e25b4488a67a3ecbf804bd3d" cid="C024" type="class" name="ty" owner="634093c169aa4d1881072b535a395848" creator="" creation-date="10/09/2024 11:16:04" />
+          <item id="5c72d7f5a2574ba3af3b97059c228e58" cid="PKG003" type="package" name="Belote Tournament" creator="" creation-date="10/09/2024 10:42:50">
+            <owned-items />
+          </item>
+          <item id="b2c9bd94a08d4ab380ecc2e8af390c97" cid="PROP024" type="property" name="rank" owner="cfc17220758a4efa957a12968d744ed4" creator="" creation-date="10/09/2024 10:32:52" visibility="private">
+            <structural-feature type="Rank" type-id="Rank" />
+          </item>
+          <item id="7be2d788f9f9493fa82374a726645360" cid="PROP041" type="property" name="players" owner="ec719b8a56954642925d3fdcb266fb62" creator="" creation-date="10/09/2024 10:47:21" visibility="private">
+            <structural-feature type="List&lt;Player&gt;" type-id="List&lt;Player&gt;" />
+          </item>
+          <item id="55430d64669f49d0bed4fd3a8e713804" cid="C021" type="class" name="Tournament" owner="5c72d7f5a2574ba3af3b97059c228e58" creator="" creation-date="10/09/2024 10:44:09">
+            <owned-items />
+            <attributes>
+              <attribute id="a236f39fa21b246dca6a858212c871cf710" cid="PROP036" name="teams" creation-date="10/09/2024 10:44:18" property-ref="a83eea4d9dc24e4c93e54736f2be36dd" />
+              <attribute id="ab7d9264c256f496ab9475a10bf58c1e7723" cid="PROP037" name="scoreBoard" creation-date="10/09/2024 10:44:29" property-ref="ed4c4138c53546a285c2e99c8b6f7eba" />
+              <attribute id="a273b841c7a7140308018e9a0eb3b5957733" cid="PROP038" name="isOngoing" creation-date="10/09/2024 10:44:47" property-ref="e4a3dfa90c0d4ee6a4bdc6e4f72c8920" />
+            </attributes>
+            <operations>
+              <operation id="o4b8bc88ab0de42cabf51e628856aac98518" cid="OP033" name="registerTeam" creation-date="10/09/2024 10:45:14" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p70387d9b160c4734a39ba034611eb737" name="Team team" type="" type-id="" creation-date="10/09/2024 10:45:40" />
+                </parameters>
+              </operation>
+              <operation id="oedb04836ccab4ce8962ca6685bc035cc581" cid="OP034" name="startTournament" creation-date="10/09/2024 10:45:40" type="void" type-id="void" visibility="public" />
+              <operation id="o6d2e199e31f64a74907a43bc910c2459559" cid="OP035" name="updateScoreBoard" creation-date="10/09/2024 10:45:56" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="pba607e3dcdbf4670b09c72b261814cfa" name="Team team" type="" type-id="" creation-date="10/09/2024 10:46:17" />
+                  <parameter id="pb7a9c24c457a4a0d842eaecd6408dcb5" name="int score" type="" type-id="" creation-date="10/09/2024 10:46:17" />
+                </parameters>
+              </operation>
+              <operation id="oe78e36da08ba4089ac49aa7171a5d11b683" cid="OP036" name="getWinner" creation-date="10/09/2024 10:46:17" type="Team" type-id="Team" visibility="public" />
+            </operations>
+          </item>
+          <item id="dab87123d331498fa1975d46e639396b" cid="PKG001" type="package" name="Bar" creator="" creation-date="10/02/2024 11:43:15" visibility="undefined">
+            <owned-items />
+          </item>
+          <item id="7033292f9911415cbbcc352ab6c0af2b" cid="PROP009" type="property" name="gender" owner="f64d35313ddf4740980ad55819c622c0" creator="" creation-date="10/02/2024 11:57:28" visibility="private">
+            <structural-feature type="Gender" type-id="Gender" />
+          </item>
+          <item id="c90165db1c824ed0bb9074cccde49fe3" cid="GNR003" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:59:23" from="1873a6503daa44d38cc9d8e72f3f66b1" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="6db24b0c20b74e47af4322c5cc6378d5" cid="PROP011" type="property" name="cashRegister" owner="1873a6503daa44d38cc9d8e72f3f66b1" creator="" creation-date="10/02/2024 11:59:40" visibility="private">
+            <structural-feature type="double" type-id="double" />
+          </item>
+          <item id="d52d569ff9554561b0dd10a792a39221" cid="PROP043" type="property" name="owner" owner="5a822017ba2e4974b11ebbe688d04317" creator="" creation-date="10/09/2024 10:49:27" visibility="private">
+            <structural-feature type="Patronne" type-id="Patronne" />
+          </item>
+          <item id="477f409d5f374a44893b8b8b5671ddae" cid="PROP026" type="property" name="name" owner="30499ae0ba544818bd2c997b2d1b75de" creator="" creation-date="10/09/2024 10:36:04" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="42da39fd6900450ea87023a25cfc42bf" cid="PROP033" type="property" name="team1Score" owner="a3a0af3ba5034c1a8f3f248202c18587" creator="" creation-date="10/09/2024 10:38:33" visibility="private">
+            <structural-feature type="int" type-id="int" />
+          </item>
+          <item id="26bdd7d1e52141f884c806ba5948da31" cid="PROP006" type="property" name="favoriteDrink" owner="f64d35313ddf4740980ad55819c622c0" creator="" creation-date="10/02/2024 11:55:40" visibility="private">
+            <structural-feature type="Drink" type-id="Drink" />
+          </item>
+          <item id="19be307463fc4622bf4c9b445ecfe07d" cid="C005" type="class" name="Owner" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:03:36" visibility="undefined">
+            <owned-items />
+            <attributes>
+              <attribute id="abea5defe64494c30bc5d134d6571ea6b175" cid="PROP014" name="barName" creation-date="10/02/2024 12:03:46" property-ref="a603d48615134a78b63c140a505221d5" />
+            </attributes>
+            <operations>
+              <operation id="o21cba8a65a644830a383708e7d245927164" cid="OP013" name="collectCashFromRegister" creation-date="10/02/2024 12:04:14" type="void" type-id="void" visibility="public" />
+              <operation id="o303f6bfa4fbc4ff5b6a6c2c947d86e06630" cid="OP014" name="offerDrink" creation-date="10/02/2024 12:04:36" type="void(overide)" type-id="void(overide)" visibility="public" />
+              <operation id="oaf8a634c46c94e22b171a9026369e03540" cid="OP015" name="banClient" creation-date="10/02/2024 12:04:51" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p6b1475082269400f8c5a24a1d02c0d51" name="Client client" type="" type-id="" creation-date="10/02/2024 12:05:10" />
+                </parameters>
+              </operation>
+              <operation id="o8f3f5ee2417046ffac091c38f2e7482a100" cid="OP016" name="stopServing" creation-date="10/02/2024 12:05:11" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p7a2932033951448eb04bb59aaec937e0" name="Client client" type="" type-id="" creation-date="10/02/2024 12:05:26" />
+                </parameters>
+              </operation>
+            </operations>
+          </item>
+          <item id="033c0f6a4aa34b41ac1fc6827213e364" cid="PROP025" type="property" name="cards" owner="677367479c16422cbc773d1a98c4810f" creator="" creation-date="10/09/2024 10:34:08" visibility="private">
+            <structural-feature type="List&lt;Card&gt;" type-id="List&lt;Card&gt;" />
+          </item>
+          <item id="1f8e318d09e14d3abbd43412bb6bd70f" cid="C011" type="class" name="Class11" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:10:32" visibility="undefined" />
+          <item id="aa9f7621182b4959ba3d507ceb30c00c" cid="C002" type="class" name="Class2" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:46:03" visibility="undefined" />
+          <item id="3b780dceba5d4e779732015f07f55d24" cid="PROP016" type="property" name="strength" owner="ceddf4f6f3c34711a4cdfcec9078922a" creator="" creation-date="10/02/2024 12:06:01" visibility="private">
+            <structural-feature type="Integer" type-id="Uml.Integer" />
+          </item>
+          <item id="c7b925b8b8904f4cbc48400a5ed04331" cid="C001" type="class" name="Human" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:44:45" visibility="public">
+            <owned-items />
+            <attributes>
+              <attribute id="a448ee9cefce047f8a322bfd87ca247bd931" cid="PROP001" name="firstName" creation-date="10/02/2024 11:45:45" property-ref="c5bdb0e6bcdb41e4a7ca6904fa0b967e" />
+              <attribute id="a3c687afb228f42adbed5ac6e1e784332579" cid="PROP002" name="nickname" creation-date="10/02/2024 11:47:59" property-ref="857a036c202a4371b7e17c32b6d467cc" />
+              <attribute id="a20a664d0b8a74e2cb50a965429a8d2aa603" cid="PROP003" name="wallet" creation-date="10/02/2024 11:48:12" property-ref="fc5e7f6410794def925cae49fa8396ba" />
+              <attribute id="a2da95d34c8d640409c17da270b4febb0359" cid="PROP004" name="popularity" creation-date="10/02/2024 11:48:45" property-ref="10e30428409b42329728fc093bdec783" />
+              <attribute id="af0d3f33eb8954cd2829c6205f8792895674" cid="PROP005" name="significantShout" creation-date="10/02/2024 11:49:10" property-ref="130c13b24ba84da996dcab671b243841" />
+            </attributes>
+            <operations>
+              <operation id="o38bfad1daa67460b8446a302776f8136744" cid="OP001" name="speak" creation-date="10/02/2024 11:45:53" type="void" type-id="void" visibility="public" />
+              <operation id="o2a7f968e324f4d4ba2692a55c0d8a77b723" cid="OP002" name="drink" creation-date="10/02/2024 11:52:55" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="pd84635738ca6474bad143bce0cf4978e" name="Drink drink" type="" type-id="" creation-date="10/02/2024 11:53:48" />
+                </parameters>
+              </operation>
+              <operation id="o91d6751a40bb415181ece972c124dfd4774" cid="OP003" name="pay" creation-date="10/02/2024 11:53:10" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="pc8e858128e5144f0ba8aba5f83cd6abc" name="double amount" type="" type-id="" creation-date="10/02/2024 11:53:31" />
+                </parameters>
+              </operation>
+              <operation id="o58a7483198f149c7a25ead37f0b79f89300" cid="OP004" name="offerDrink" creation-date="10/02/2024 11:53:50" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="pc2cead25a2644e0d8e9e7e9394126858" name="Human person" type="" type-id="" creation-date="10/02/2024 11:54:32" />
+                  <parameter id="p24fd1d2d64f846f2b0f4d003515b5b1a" name="Drink drink" type="" type-id="" creation-date="10/02/2024 11:54:32" />
+                </parameters>
+              </operation>
+              <operation id="oa7e5cd5596024f19b9c18876502775e4941" cid="OP005" name="introduce" creation-date="10/02/2024 11:54:32" type="void" type-id="void" visibility="public" />
+            </operations>
+            <source-codes>
+              <source-code language="ActionScript" />
+            </source-codes>
+          </item>
+          <item id="099ccd9473ca40ee8813fd718d555da9" cid="GNR006" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:07:21" from="0ff59f325a7e4fe0becea6fdbd8e1ce7" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="f7592cd6b9694066a4715853c4880fca" cid="C014" type="class" name="Class14" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:11:48" visibility="undefined" />
+          <item id="32295629d4e9455c8e008678d96289da" cid="PROP017" type="property" name="charm" owner="ceddf4f6f3c34711a4cdfcec9078922a" creator="" creation-date="10/02/2024 12:06:13" visibility="private">
+            <structural-feature type="Integer" type-id="Uml.Integer" />
+          </item>
+          <item id="677367479c16422cbc773d1a98c4810f" cid="C016" type="class" name="Deck" owner="93374caba02a492388d0af9cf2fdf303" creator="" creation-date="10/09/2024 10:34:01">
+            <owned-items />
+            <attributes>
+              <attribute id="af2ff8f6d785a47bf9e1d153e1a98599b762" cid="PROP025" name="cards" creation-date="10/09/2024 10:34:08" property-ref="033c0f6a4aa34b41ac1fc6827213e364" />
+            </attributes>
+            <operations>
+              <operation id="o0c28d20d1efe409b92ea6371f8d6e8c5695" cid="OP023" name="shuffle" creation-date="10/09/2024 10:34:32" type="void" type-id="void" visibility="public" />
+              <operation id="o2d34d23df7fe4f99b1719cf32519f724527" cid="OP024" name="cut" creation-date="10/09/2024 10:34:46" type="void" type-id="void" visibility="public" />
+              <operation id="o8d035aa2a3034c588f033b39db1a5d51867" cid="OP025" name="resetDeck" creation-date="10/09/2024 10:34:49" type="void" type-id="void" visibility="public" />
+            </operations>
+          </item>
+          <item id="5a822017ba2e4974b11ebbe688d04317" cid="C023" type="class" name="Bar" creator="" creation-date="10/09/2024 10:49:05">
+            <owned-items />
+            <attributes>
+              <attribute id="a94938b899b024209b9bbb715f94c59c7348" cid="PROP042" name="name" creation-date="10/09/2024 10:49:20" property-ref="2553ad7bb5db49f7b8ce3222a60269b4" />
+              <attribute id="afc474178b90a4ad292ab2d45168650e6934" cid="PROP043" name="owner" creation-date="10/09/2024 10:49:27" property-ref="d52d569ff9554561b0dd10a792a39221" />
+              <attribute id="a1de0e660eebf4741bac08ded1b76b9a8925" cid="PROP044" name="staff" creation-date="10/09/2024 10:49:40" property-ref="9ea4f23b6c394e608b07859f306ed3d4" />
+              <attribute id="a2b2565a47e12479a8a5b5c8a957dcca9818" cid="PROP045" name="clients" creation-date="10/09/2024 10:49:57" property-ref="e2f77be7d96f4b0f9a2e41d4891dfdd2" />
+              <attribute id="a1c593ab5a09c48fea8ac2436fd3becca940" cid="PROP046" name="stock" creation-date="10/09/2024 10:50:17" property-ref="b367746d0cca404285d2d720c0db9911" />
+            </attributes>
+            <operations>
+              <operation id="odbc522456a28425db9ffd27d870182ff254" cid="OP038" name="addClient" creation-date="10/09/2024 10:50:45" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p9b5da0f775e44cac9eab9060194c838e" name="Client client" type="" type-id="" creation-date="10/09/2024 10:51:04" />
+                </parameters>
+              </operation>
+              <operation id="oba4796f1b443491385763c9ee090a3f5948" cid="OP039" name="removeClient" creation-date="10/09/2024 10:51:06" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p828dca71c58a44b489baf2469c887992" name="Client client" type="" type-id="" creation-date="10/09/2024 10:51:25" />
+                </parameters>
+              </operation>
+              <operation id="o7c3cbcf76b2845919a9e6bea00108dac404" cid="OP040" name="manageStock" creation-date="10/09/2024 10:51:25" type="void" type-id="void" visibility="public" />
+              <operation id="o25b832f163e447fb8394f2363f6a6625853" cid="OP041" name="servDrinks" creation-date="10/09/2024 10:51:35" type="void" type-id="void" visibility="public" />
+            </operations>
+          </item>
+          <item id="dfa6a3fd89aa42fe8d207d7d2ee43b95" cid="PROP029" type="property" name="skillLevel" owner="30499ae0ba544818bd2c997b2d1b75de" creator="" creation-date="10/09/2024 10:36:49" visibility="private">
+            <structural-feature type="SkillLevel" type-id="SkillLevel" />
+          </item>
+          <item id="41d4fd7fef9a41bfba52335458c7cf90" cid="PROP007" type="property" name="backupDrink" owner="f64d35313ddf4740980ad55819c622c0" creator="" creation-date="10/02/2024 11:56:43" visibility="private">
+            <structural-feature type="Drink" type-id="Drink" />
+          </item>
+          <item id="ccea00b2aaea48a9a4160c74c47ac6ab" cid="GNR005" type="generalization" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:05:49" from="ceddf4f6f3c34711a4cdfcec9078922a" to="c7b925b8b8904f4cbc48400a5ed04331" visibility="package" />
+          <item id="3a61494411ec4437b524dcdaff382df3" cid="PROP012" type="property" name="isServing" owner="1873a6503daa44d38cc9d8e72f3f66b1" creator="" creation-date="10/02/2024 11:59:48" visibility="private">
+            <structural-feature type="Boolean" type-id="Uml.Boolean" />
+          </item>
+          <item id="0ff59f325a7e4fe0becea6fdbd8e1ce7" cid="C007" type="class" name="Supplier" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:07:21" visibility="undefined">
+            <operations>
+              <operation id="oc7cd0b239e6f42a585a2f726354369d7640" cid="OP020" name="deliverOrder" creation-date="10/02/2024 12:07:32" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="pde1a92b9358946f9a12b45a28eb9d6fd" name="Drink drink" type="" type-id="" creation-date="10/02/2024 12:08:06" />
+                  <parameter id="p03b49117c69440349c9f65a4183e1189" name="Int quantity" type="" type-id="" creation-date="10/02/2024 12:08:06" />
+                </parameters>
+              </operation>
+            </operations>
+          </item>
+          <item id="e2f77be7d96f4b0f9a2e41d4891dfdd2" cid="PROP045" type="property" name="clients" owner="5a822017ba2e4974b11ebbe688d04317" creator="" creation-date="10/09/2024 10:49:57" visibility="private">
+            <structural-feature type="List&lt;Clients&gt;" type-id="List&lt;Clients&gt;" />
+          </item>
+          <item id="fa9fcefb78bd4e8cab3c85f7f148fce1" cid="PROP022" type="property" name="suit" owner="cfc17220758a4efa957a12968d744ed4" creator="" creation-date="10/09/2024 10:32:30" visibility="private">
+            <structural-feature type="Suit" type-id="Suit" />
+          </item>
+          <item id="d4e5351d58bb4afbb3e72f1aea731040" cid="DT001" type="data-type" name="DataType1" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 12:02:18" visibility="undefined" />
+          <item id="c5bdb0e6bcdb41e4a7ca6904fa0b967e" cid="PROP001" type="property" name="firstName" owner="c7b925b8b8904f4cbc48400a5ed04331" creator="" creation-date="10/02/2024 11:45:45" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="bcfdfb16eca3481cb5b707e42fa3ffe3" cid="PROP023" type="property" name="value" owner="cfc17220758a4efa957a12968d744ed4" creator="" creation-date="10/09/2024 10:32:44" visibility="private">
+            <structural-feature type="int" type-id="int" />
+          </item>
+          <item id="2553ad7bb5db49f7b8ce3222a60269b4" cid="PROP042" type="property" name="name" owner="5a822017ba2e4974b11ebbe688d04317" creator="" creation-date="10/09/2024 10:49:20" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="862787e64c824c09b7aa8a0429abfac0" cid="PROP028" type="property" name="teamName" owner="30499ae0ba544818bd2c997b2d1b75de" creator="" creation-date="10/09/2024 10:36:29" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="a603d48615134a78b63c140a505221d5" cid="PROP014" type="property" name="barName" owner="19be307463fc4622bf4c9b445ecfe07d" creator="" creation-date="10/02/2024 12:03:46" visibility="private">
+            <structural-feature type="String" type-id="Uml.String" />
+          </item>
+          <item id="93cbfe1fbbe34e418781bb9939ba1656" cid="I001" type="uml-interface-classifier" name="Interface1" owner="dab87123d331498fa1975d46e639396b" creator="" creation-date="10/02/2024 11:43:34" visibility="undefined" />
+          <item id="fc5e7f6410794def925cae49fa8396ba" cid="PROP003" type="property" name="wallet" owner="c7b925b8b8904f4cbc48400a5ed04331" creator="" creation-date="10/02/2024 11:48:12" visibility="private">
+            <structural-feature type="double" type-id="double" />
+          </item>
+          <item id="30499ae0ba544818bd2c997b2d1b75de" cid="C017" type="class" name="Player" owner="93374caba02a492388d0af9cf2fdf303" creator="" creation-date="10/09/2024 10:35:49">
+            <owned-items />
+            <attributes>
+              <attribute id="ac370ad5186214505970f8d647a10e541455" cid="PROP026" name="name" creation-date="10/09/2024 10:36:04" property-ref="477f409d5f374a44893b8b8b5671ddae" />
+              <attribute id="aaa427d40e38249ba890337d0ed448cc713" cid="PROP028" name="teamName" creation-date="10/09/2024 10:36:29" property-ref="862787e64c824c09b7aa8a0429abfac0" />
+              <attribute id="a6c36a83e47de4036a90425d399cdf28f973" cid="PROP029" name="skillLevel" creation-date="10/09/2024 10:36:49" property-ref="dfa6a3fd89aa42fe8d207d7d2ee43b95" />
+              <attribute id="a7d23f898618a45389e5d6ec718ce3d69571" cid="PROP030" name="hand" creation-date="10/09/2024 10:37:02" property-ref="987cf14fcec94f769894c8053222c938" />
+            </attributes>
+            <operations>
+              <operation id="o4e495d1d145d40d183ba782dfa5ba719721" cid="OP027" name="playCard" creation-date="10/09/2024 10:37:22" type="void" type-id="void" visibility="public">
+                <parameters>
+                  <parameter id="p4d9053636a5d4dd19af333e884daadcd" name="Card card" type="" type-id="" creation-date="10/09/2024 10:37:41" />
+                </parameters>
+              </operation>
+              <operation id="occe43d108a804bcfad6656cf62ed3751499" cid="OP028" name="calculateScore" creation-date="10/09/2024 10:37:45" type="int" type-id="int" visibility="public" />
+            </operations>
+          </item>
+          <item id="ec719b8a56954642925d3fdcb266fb62" cid="C022" type="class" name="Team" owner="5c72d7f5a2574ba3af3b97059c228e58" creator="" creation-date="10/09/2024 10:46:55">
+            <owned-items />
+            <attributes>
+              <attribute id="af91af83abf24436fbf42ef785a43aa80136" cid="PROP040" name="teamName" creation-date="10/09/2024 10:47:08" property-ref="034e66187ec74f9ab92c077a51615954" />
+              <attribute id="a082aa4f98c3845cdbdc4e325f78eba17159" cid="PROP041" name="players" creation-date="10/09/2024 10:47:21" property-ref="7be2d788f9f9493fa82374a726645360" />
+            </attributes>
+            <operations>
+              <operation id="o9d5cd7c4fb6e493ca93a86fc184d2517350" cid="OP037" name="NewOperation1" creation-date="10/09/2024 10:47:32" type="" type-id="" visibility="public" />
+            </operations>
+          </item>
+          <item id="72085872479c4dbda956ce1b3b756e07" cid="PROP010" type="property" name="canReceiveDrink" owner="f64d35313ddf4740980ad55819c622c0" creator="" creation-date="10/02/2024 11:57:42" visibility="private">
+            <structural-feature type="Boolean" type-id="Uml.Boolean" />
+          </item>
+        </abstract-items>
+        <layer id="db32ad6711044f6e813e80f92c1b5a53" name="Default" visible="true" enabled="true" locked="false">
+          <item id="dab87123d331498fa1975d46e639396b" iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 11:43:15" order-index="0" type="entity">
+            <layout ax="-356" ay="57" awidth="1397" aheight="734" x="85" y="57" width="956" height="734" expanded="-356,57,1397,734" collapsed="0,0,0,0" />
+            <package name-in-body="false" />
+          </item>
+          <item id="c7b925b8b8904f4cbc48400a5ed04331" iid="1025c5ce4fa14a8ba4e960930399da67" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" show-fields="true" creation-date="10/02/2024 11:44:45" order-index="1" type="entity">
+            <layout ax="322" ay="129.36835" awidth="225" aheight="249" x="322" y="129.36835" width="225" height="249" />
+            <classifier />
+            <class />
+          </item>
+          <item id="f64d35313ddf4740980ad55819c622c0" iid="abf002f1f62048d0b91a1eb8a3b26b61" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 11:55:25" order-index="2" type="entity">
+            <layout ax="393" ay="512.86835" awidth="225" aheight="174" x="393" y="512.86835" width="140" height="174" />
+            <classifier />
+            <class />
+          </item>
+          <item id="7063f2b6df214f7b997c678568d55b49" iid="6919ed868e0c404c9e51e538a9a46f66" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 11:55:25" order-index="3" type="relation">
+            <layout line-style="oblique" lock-to-fields="false" auto-path="" x1="488" y1="513" x2="460" y2="378" start-border-pos="0.10543996175130209" end-border-pos="0.596885036892361" name-position="0,20">
+              <points>
+                <point x="488" y="513" />
+                <point x="460" y="378" />
+              </points>
+            </layout>
+            <relation from="f64d35313ddf4740980ad55819c622c0" from-iid="abf002f1f62048d0b91a1eb8a3b26b61" to="c7b925b8b8904f4cbc48400a5ed04331" to-iid="1025c5ce4fa14a8ba4e960930399da67" />
+          </item>
+          <item id="1873a6503daa44d38cc9d8e72f3f66b1" iid="718a59b6af8e4d80b2196575236758e5" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 11:59:23" order-index="4" type="entity">
+            <layout ax="31.5" ay="496.86835" awidth="258" aheight="190" x="31.5" y="496.86835" width="258" height="190" />
+            <classifier />
+            <class />
+          </item>
+          <item id="c90165db1c824ed0bb9074cccde49fe3" iid="981c165c6ff34bf49b48f8442b2816e5" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 11:59:23" order-index="5" type="relation">
+            <layout line-style="oblique" lock-to-fields="false" auto-path="" x1="237" y1="497" x2="333" y2="378" start-border-pos="0.1991393806398377" end-border-pos="0.7372452121310764" name-position="0,20">
+              <points>
+                <point x="237" y="497" />
+                <point x="333" y="378" />
+              </points>
+            </layout>
+            <relation from="1873a6503daa44d38cc9d8e72f3f66b1" from-iid="718a59b6af8e4d80b2196575236758e5" to="c7b925b8b8904f4cbc48400a5ed04331" to-iid="1025c5ce4fa14a8ba4e960930399da67" />
+          </item>
+          <item id="19be307463fc4622bf4c9b445ecfe07d" iid="317c77d0e0374c5b99cc9704f2270b4f" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:03:36" order-index="6" type="entity">
+            <layout ax="771.5" ay="390.86835" awidth="225" aheight="130" x="771.5" y="390.86835" width="140" height="130" />
+            <classifier />
+            <class />
+          </item>
+          <item id="a63330ea2b04499d9ab0c6cdd03cc942" iid="1e7d552a85834ed280db58d81c43d9f8" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:03:36" order-index="7" type="relation">
+            <layout line-style="oblique" lock-to-fields="false" auto-path="" x1="772" y1="405" x2="547" y2="305" start-border-pos="0.9722938537597656" end-border-pos="0.4260603203830949" name-position="0,20">
+              <points>
+                <point x="772" y="405" />
+                <point x="547" y="305" />
+              </points>
+            </layout>
+            <relation from="19be307463fc4622bf4c9b445ecfe07d" from-iid="317c77d0e0374c5b99cc9704f2270b4f" to="c7b925b8b8904f4cbc48400a5ed04331" to-iid="1025c5ce4fa14a8ba4e960930399da67" />
+          </item>
+          <item id="ceddf4f6f3c34711a4cdfcec9078922a" iid="c3941b6c44684986be55cf80a20cfb4f" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:05:49" order-index="8" type="entity">
+            <layout ax="-1" ay="213.86835" awidth="225" aheight="130" x="-1" y="213.86835" width="140" height="130" />
+            <classifier />
+            <class />
+          </item>
+          <item id="ccea00b2aaea48a9a4160c74c47ac6ab" iid="891f2071e4864fbd96b438b1caa5bc8c" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:05:49" order-index="9" type="relation">
+            <layout line-style="oblique" lock-to-fields="false" auto-path="" x1="224" y1="270" x2="322" y2="263" start-border-pos="0.3585307781512921" end-border-pos="0.8661372479664753" name-position="0,20">
+              <points>
+                <point x="224" y="270" />
+                <point x="322" y="263" />
+              </points>
+            </layout>
+            <relation from="ceddf4f6f3c34711a4cdfcec9078922a" from-iid="c3941b6c44684986be55cf80a20cfb4f" to="c7b925b8b8904f4cbc48400a5ed04331" to-iid="1025c5ce4fa14a8ba4e960930399da67" />
+          </item>
+          <item id="0ff59f325a7e4fe0becea6fdbd8e1ce7" iid="62b891def33048619460975d0768ed3c" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:07:21" order-index="10" type="entity">
+            <layout ax="752.5" ay="213.86835" awidth="225" aheight="80" x="752.5" y="213.86835" width="140" height="80" />
+            <classifier />
+            <class />
+          </item>
+          <item id="099ccd9473ca40ee8813fd718d555da9" iid="88a980afe31a4e40b1fcc17bd178d00e" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" creation-date="10/02/2024 12:07:21" order-index="11" type="relation">
+            <layout line-style="oblique" lock-to-fields="false" auto-path="" x1="752" y1="254" x2="547" y2="254" start-border-pos="0.8745885848999023" end-border-pos="0.37513218155826433" name-position="0,20">
+              <points>
+                <point x="752" y="254" />
+                <point x="547" y="254" />
+              </points>
+            </layout>
+            <relation from="0ff59f325a7e4fe0becea6fdbd8e1ce7" from-iid="62b891def33048619460975d0768ed3c" to="c7b925b8b8904f4cbc48400a5ed04331" to-iid="1025c5ce4fa14a8ba4e960930399da67" />
+          </item>
+          <item id="5a822017ba2e4974b11ebbe688d04317" iid="c440f0e5fbc9459aaf5918124677091a" show-fields="true" creation-date="10/09/2024 10:49:05" order-index="21" type="entity">
+            <layout ax="-799" ay="250.86835" awidth="225" aheight="210" x="-799" y="250.86835" width="225" height="210" />
+            <classifier />
+            <class />
+          </item>
+          <item id="bbe1e764939640bca14ab1c3cbfd5452" iid="974a3092f19d4990a67e87afeee95357" container="dab87123d331498fa1975d46e639396b" container-iid="aeaf46a629bb47af8a81e7033e7c4f94" show-fields="true" creation-date="10/02/2024 12:09:28" order-index="12" type="entity">
+            <layout ax="-274" ay="174" awidth="151" aheight="130" x="-274" y="174" width="140" height="130" />
+            <classifier />
+            <class />
+          </item>
+          <item id="93374caba02a492388d0af9cf2fdf303" iid="adb8f9422ef5487fb996a12e8f19840d" creation-date="10/09/2024 10:31:52" order-index="13" type="entity">
+            <layout ax="-1888" ay="72" awidth="782" aheight="748" x="-1888" y="72" width="782" height="748" expanded="-1888,72,782,748" collapsed="0,0,0,0" />
+            <package name-in-body="false" />
+          </item>
+          <item id="cfc17220758a4efa957a12968d744ed4" iid="69b89094bb544f97b6042425b7625622" container="93374caba02a492388d0af9cf2fdf303" container-iid="adb8f9422ef5487fb996a12e8f19840d" show-fields="true" creation-date="10/09/2024 10:32:22" order-index="14" type="entity">
+            <layout ax="-1762" ay="220" awidth="140" aheight="120" x="-1762" y="220" width="140" height="120" />
+            <classifier />
+            <class />
+          </item>
+          <item id="30499ae0ba544818bd2c997b2d1b75de" iid="a716167bb59a4cc19b78972e1553ebde" container="93374caba02a492388d0af9cf2fdf303" container-iid="adb8f9422ef5487fb996a12e8f19840d" show-fields="true" creation-date="10/09/2024 10:35:49" order-index="16" type="entity">
+            <layout ax="-1456" ay="220" awidth="176" aheight="155" x="-1456" y="220" width="140" height="160" />
+            <classifier />
+            <class />
+          </item>
+          <item id="a3a0af3ba5034c1a8f3f248202c18587" iid="6fd4ad28990144a9bf6114692b392852" container="93374caba02a492388d0af9cf2fdf303" container-iid="adb8f9422ef5487fb996a12e8f19840d" show-fields="true" creation-date="10/09/2024 10:38:09" order-index="17" type="entity">
+            <layout ax="-1442.5" ay="555.5" awidth="149" aheight="191" x="-1442.5" y="555.5" width="140" height="160" />
+            <classifier />
+            <class />
+          </item>
+          <item id="677367479c16422cbc773d1a98c4810f" iid="4312623235b742498cba21e0e73ca2b6" container="93374caba02a492388d0af9cf2fdf303" container-iid="adb8f9422ef5487fb996a12e8f19840d" show-fields="true" creation-date="10/09/2024 10:34:01" order-index="15" type="entity">
+            <layout ax="-1734" ay="577.5" awidth="140" aheight="120" x="-1734" y="577.5" width="140" height="120" />
+            <classifier />
+            <class />
+          </item>
+          <item id="5c72d7f5a2574ba3af3b97059c228e58" iid="b3c7695d982f4a18a99612106565489b" creation-date="10/09/2024 10:42:50" order-index="18" type="entity">
+            <layout ax="-1877" ay="904" awidth="771" aheight="481" x="-1877" y="904" width="771" height="481" expanded="-1877,904,771,481" collapsed="0,0,0,0" />
+            <package name-in-body="false" />
+          </item>
+          <item id="55430d64669f49d0bed4fd3a8e713804" iid="e8ddc67aa2e74600bea9e8794949c655" container="5c72d7f5a2574ba3af3b97059c228e58" container-iid="b3c7695d982f4a18a99612106565489b" show-fields="true" creation-date="10/09/2024 10:44:09" order-index="19" type="entity">
+            <layout ax="-1782" ay="976" awidth="298" aheight="172" x="-1782" y="976" width="140" height="160" />
+            <classifier />
+            <class />
+          </item>
+          <item id="ec719b8a56954642925d3fdcb266fb62" iid="75a4e35e52cc42bab4f510c813c63ee4" container="5c72d7f5a2574ba3af3b97059c228e58" container-iid="b3c7695d982f4a18a99612106565489b" show-fields="true" creation-date="10/09/2024 10:46:55" order-index="20" type="entity">
+            <layout ax="-1322" ay="1064" awidth="161" aheight="120" x="-1322" y="1064" width="161" height="120" />
+            <classifier />
+            <class />
+          </item>
+        </layer>
+      </diagram>
+    </model>
+  </models>
+</sim-project>

@@ -3,15 +3,15 @@
 {% load custom_filters %}
 
 {% block title %}My Drive - SkyVault{% endblock %}
-{% block extra_js %}<script src="{% static 'vault/vault.js' %}?=v3"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'vault/vault.js' %}"></script>{% endblock %}
 {% block content %}
 <div class="drive-container">
-    <div class="drive-header">
+    <div class="drive-header" data-folder-id="{{ folder.id|default_if_none:'' }}">
 
         <!-- Folder Creation Form -->
         <form method="post" action="{% url 'create_folder' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="folder_name">Create New Folder:</label>
+            {% comment %} <label for="folder_name">Create New Folder:</label> {% endcomment %}
             <input type="text" name="folder_name" id="folder_name" placeholder="Enter folder name" required>
             <button type="submit">Create</button>
         </form>
@@ -19,11 +19,11 @@
         <!-- File Upload Form -->
         <form method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="uploaded-file">Upload File:</label>
+            {% comment %} <label for="uploaded-file">Upload File:</label> {% endcomment %}
             <input type="file" name="uploaded_file" id="uploaded-file" required>
             
             <!-- Folder Selection Dropdown (Optional) -->
-            <label for="folder">Upload to Folder:</label>
+            <label for="folder">Path</label>
             <select name="folder_id" id="folder">
                 <option value="">Root</option>
                 {% for folder in folders %}
@@ -37,39 +37,33 @@
     </div>
     
     {% if messages %}
-    <div class="message-container">
+    <div class="message-container" >
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
         {% endfor %}
     </div>
     {% endif %}
     
-    <!-- File grid display -->
+    {% comment %} <div id="alert-container" style="display:none;"></div> {% endcomment %}
     <!-- Include the file grid for displaying folders and files -->
     {% include "vault/_file_grid.html" with folders=folders files=files %}
 
     <!-- Context menu -->
     <div class="context-menu">
-        <div class="context-menu-item">Open</div>
-        <div class="context-menu-item">Cut</div>
-        <div class="context-menu-item">Copy</div>
-        <div class="context-menu-item">Paste</div>
-        <div class="context-menu-item">Delete</div>
-        <div class="context-menu-item">Share</div>
-        <div class="context-menu-item">Star</div>
-        <div class="context-menu-item">About</div>
+        <!-- Options specific to files/folders -->
+        <div class="context-menu-item file-folder-only" data-action="open">Open</div>
+        <div class="context-menu-item file-folder-only" data-action="cut">Cut</div>
+        <div class="context-menu-item file-folder-only" data-action="copy">Copy</div>
+        <div class="context-menu-item file-folder-only" data-action="delete">Delete</div>
+        <div class="context-menu-item file-folder-only" data-action="share">Share</div>
+        <div class="context-menu-item file-folder-only" data-action="star">Star</div>
+        
+        <!-- Options available for empty space -->
+        <div class="context-menu-item" data-action="paste">Paste</div>
+        <div class="context-menu-item" data-action="about">About</div>
     </div>
+    
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-            let messages = document.querySelectorAll(".alert");
-            messages.forEach(function(message) {
-                message.style.display = "none";
-            });
-        }, 5000); // Adjust time as needed (5000 ms = 5 seconds)
-    });
-</script>
 {% endblock %}
 
 

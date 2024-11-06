@@ -1,0 +1,13 @@
+<!-- templates/vault/confirm_delete.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Confirm Delete</h2>
+  <p>Are you sure you want to delete this {{ item_type }}: '{{ item.name }}'?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, delete</button>
+    <a href="{% url 'vault_home' %}">Cancel</a>
+  </form>
+{% endblock %}

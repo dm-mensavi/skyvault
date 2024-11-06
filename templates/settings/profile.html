@@ -17,4 +17,12 @@
     <p><strong>Bio:</strong> {{ user_profile.bio }}</p>
 </div>
 <a href="{% url 'update_profile_view' %}" class="button">Update Profile</a>
+{% if messages %}
+<div class="message-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}"  id="alert-container">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 {% endblock %}

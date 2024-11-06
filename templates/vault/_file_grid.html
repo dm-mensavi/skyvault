@@ -3,7 +3,7 @@
 <div class="file-grid">
   <!-- Display Folders -->
   {% for folder in folders %}
-  <div class="file-item">
+  <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
       <a href="{% url 'view_folder' folder.id %}">
           <span class="material-icons">folder</span>
           <p>{{ folder.name }}</p>
@@ -13,15 +13,15 @@
 
   <!-- Display Files -->
   {% for file in files %}
-  <div class="file-item">
-    <a href="{% url 'open_file' file.id %}">
-      {% if file.uploaded_file.name|endswith:".jpg" or file.uploaded_file.name|endswith:".png" %}
-          <img src="{{ file.uploaded_file.url }}" alt="{{ file.name }}" class="file-icon">
-      {% else %}
-          <span class="material-icons">insert_drive_file</span>
-      {% endif %}
-      <p>{{ file.name }}</p>
-    </a>
+  <div class="file-item" data-id="{{ file.id }}" data-type="file">
+      <a href="{% url 'open_file' file.id %}">
+          {% if file.uploaded_file.name|endswith:".jpg" or file.uploaded_file.name|endswith:".png" %}
+              <img src="{{ file.uploaded_file.url }}" alt="{{ file.name }}" class="file-icon">
+          {% else %}
+              <span class="material-icons">insert_drive_file</span>
+          {% endif %}
+          <p>{{ file.name }}</p>
+      </a>
   </div>
   {% endfor %}
 </div>
