@@ -608,5 +608,261 @@ body {
 
 /* $Styles for trash */
 /* $Styles for trash */
-/* $Styles for module */
-/* $Styles for module */
+
+/* $Styles for settings */
+/* $Styles for settings */
+
+/* Profile and Update Profile Page Styles */
+/* CSS to style the file upload input */
+.file-upload {
+  width: 100%; /* Adjusts to container width */
+  max-width: 400px; /* Sets a max width */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+}
+
+/* Profile Container */
+#profile-container, #update-profile-container {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Profile Title */
+#profile-container h2, #update-profile-container h2 {
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* Profile Picture */
+.profile-avatar {
+  display: block;
+  margin: 0 auto 15px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #1a73e8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Profile Info Text */
+#profile-info p, #profile-info strong {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.6;
+  text-align: center;
+}
+
+#profile-info strong {
+  font-weight: 600;
+}
+
+/* Profile Update Button */
+.profile-button {
+  display: inline-block;
+  background-color: #4caf50;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+}
+
+.profile-button:hover {
+  background-color: #388e3c;
+}
+
+.profile-button, .logout-button {
+  display: inline-block;
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+
+.profile-button {
+  background-color: #1a73e8;
+  color: #ffffff;
+}
+
+.logout-button {
+  background-color: #e74c3c;
+  color: #ffffff;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+/* Modal Styles for Logout Confirmation */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 300px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.modal-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.confirm-logout {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.confirm-logout:hover {
+  background-color: #c0392b;
+}
+
+.cancel-logout {
+  background-color: #bdc3c7;
+  color: black;
+}
+
+.cancel-logout:hover {
+  background-color: #95a5a6;
+}
+
+/* Update Profile Form */
+.update-profile-form input[type="text"],
+.update-profile-form input[type="email"],
+.update-profile-form input[type="file"],
+.update-profile-form textarea {
+  width: 90%;
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid #d1d3d4;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+  margin-top: 10px;
+}
+
+.update-profile-form textarea {
+  resize: vertical;
+  min-height: 100px;
+  width: 90%;
+}
+
+/* Save Changes Button */
+.profile-submit-button {
+  background-color: #1a73e8;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+}
+
+.profile-submit-button:hover {
+  background-color: #185ABC;
+}
+
+/* Profile Message Container */
+.profile-message-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  z-index: 1000;
+}
+
+.profile-message-container .alert {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+/* Alert Types */
+.profile-message-container .alert-success {
+  background-color: #4caf50;
+}
+
+.profile-message-container .alert-error {
+  background-color: #f44336;
+}
+
+.profile-message-container .alert-info {
+  background-color: #2196f3;
+}
+
+.profile-message-container .alert-warning {
+  background-color: #ff9800;
+}
+
+/* Close button for alerts */
+.profile-message-container .alert .close-btn {
+  float: right;
+  font-size: 18px;
+  line-height: 1;
+  color: #ffffff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+
+/* $Styles for settings */
+/* $Styles for settings */

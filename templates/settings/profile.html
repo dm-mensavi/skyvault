@@ -1,28 +1,69 @@
-<!-- settings/templates/settings/profile.html -->
 {% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<h2>{{ user.username }}'s Profile</h2>
-<div class="profile-info">
-    {% if user_profile.profile_picture %}
-        <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="avatar">
-    {% else %}
-        <span class="material-icons avatar">account_circle</span>
-    {% endif %}
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Bio:</strong> {{ user_profile.bio }}</p>
+<div id="profile-container">
+    <h2>{{ user.username }}'s Profile</h2>
+    <div id="profile-info">
+        {% if user_profile.profile_picture %}
+            <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
+        {% else %}
+            <img src="{% static 'images/default_profile.jpg' %}" alt="Default Profile Picture" class="profile-avatar">
+        {% endif %}
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Bio:</strong> {{ user_profile.bio }}</p>
+    </div>
+    <a href="{% url 'update_profile_view' %}" class="profile-button">Update Profile</a>
+    <a href="#" class="profile-button logout-button" onclick="openModal()">Logout</a>
 </div>
-<a href="{% url 'update_profile_view' %}" class="button">Update Profile</a>
+
 {% if messages %}
-<div class="message-container">
+<div class="profile-message-container">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}"  id="alert-container">{{ message }}</div>
+    <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
     {% endfor %}
 </div>
 {% endif %}
 
+<!-- Logout Modal -->
+<div id="logout-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal()">×</span>
+        <h3>Confirm Logout</h3>
+        <p>Are you sure you want to log out?</p>
+        <div class="modal-actions">
+            <button onclick="confirmLogout()" class="modal-button confirm-logout">Yes, Log Out</button>
+            <button onclick="closeModal()" class="modal-button cancel-logout">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal() {
+        document.getElementById("logout-modal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("logout-modal").style.display = "none";
+    }
+
+    function confirmLogout() {
+        window.location.href = "{% url 'logout_view' %}"; // Redirect to the logout URL
+    }
+
+    // Close the modal if the user clicks outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById("logout-modal");
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+</script>
 {% endblock %}

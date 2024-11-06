@@ -13,7 +13,7 @@ def dashboard_view(request):
 def file_type_distribution(request):
     # Calculate counts for each file type based on the extension or file categories
     file_type_counts = (
-        File.objects.filter(trashed=False)
+        File.objects.filter(trashed=False, user=request.user)  # Filter by the current user
         .values('uploaded_file')
         .annotate(count=Count('id'))
     )
@@ -56,7 +56,7 @@ def storage_usage_over_time(request):
     start_date = end_date - timedelta(days=30)
 
     data = (
-        File.objects.filter(created_at__range=[start_date, end_date], trashed=False)
+        File.objects.filter(created_at__range=[start_date, end_date], trashed=False, user=request.user)  # Filter by the current user
         .extra({'day': "date(created_at)"})
         .values('day')
         .annotate(total_size=Sum('size'))

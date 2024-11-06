@@ -1,6 +1,7 @@
 # settings/views.py
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserProfileForm
 from .models import UserProfile
@@ -23,3 +24,9 @@ def update_profile_view(request):
         form = UserProfileForm(instance=user_profile)
 
     return render(request, 'settings/update_profile.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('login')
