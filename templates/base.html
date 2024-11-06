@@ -32,8 +32,8 @@
             <li><a href="{% url 'storage_info' %}"><span class="material-icons">cloud</span> Storage</a></li>
         </ul>
         <div class="storage-info">
-            <progress value="{{ user_profile.used_space }}" max="100"></progress>
-            <p>Used: {{ user_profile.used_space }} MB of 100 MB</p>
+            <progress value="{{ used_percentage }}" max="100"></progress>
+            <p>Used: {{ total_storage|floatformat:2 }} MB of {{ max_storage }} MB</p>
         </div>
     </div>
 
