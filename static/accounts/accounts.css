@@ -1,51 +1,127 @@
-/* static/accounts/accounts.css */
+/* General Container for Login and Register Pages */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #F8F9FA;
+  font-family: 'Poppins', sans-serif;
+}
 
-/* Common styles for login and register forms */
-.register, .login {
-  max-width: 400px;
-  margin: 0 auto;
-  background-color: #f9f9f9;
-  padding: 20px;
-  border: 1px solid #ddd;
+.login, .register {
+  background-color: #ffffff;
   border-radius: 8px;
-}
-
-.register h2, .login h2 {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 360px;
   text-align: center;
-  color: #333;
 }
 
-/* Additional input and button styling */
-form label {
-  display: block;
+.login h2, .register h2 {
+  font-size: 24px;
+  color: #1a73e8;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* Form Styling */
+.login form, .register form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login label, .register label {
+  text-align: left;
+  font-size: 14px;
+  color: #333;
   margin-bottom: 5px;
-  color: #666;
 }
 
-form input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.login input, .register input {
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #d1d3d4;
+  font-size: 16px;
 }
 
-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #4CAF50;
-  color: white;
+.login button, .register button {
+  background-color: #1a73e8;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
+  margin-top: 10px;
+  font-weight: 600;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #45a049;
+.login button:hover, .register button:hover {
+  background-color: #185ABC;
 }
 
-p {
-  text-align: center;
-  font-size: 0.9em;
-  color: #333;
+/* Link Styling */
+.login p, .register p {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.login p a, .register p a {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login p a:hover, .register p a:hover {
+  text-decoration: underline;
+}
+
+/* Message Container for Notifications */
+.message-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  z-index: 1000;
+}
+
+.alert {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alert-success {
+  background-color: #4caf50;
+}
+
+.alert-error {
+  background-color: #f44336;
+}
+
+.alert-info {
+  background-color: #2196f3;
+}
+
+.alert-warning {
+  background-color: #ff9800;
+}
+
+/* Close button for alerts */
+.alert .close-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 5px;
 }

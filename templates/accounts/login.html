@@ -4,20 +4,54 @@
 {% block title %}<title>Login - SkyVault</title>{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}?=v3">
 {% endblock %}
 
 {% block content %}
-    <div class="login">
-        <h2>Login</h2>
-        <form method="post">
-            {% csrf_token %}
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <button type="submit">Login</button>
+    <div class="auth-container">
+        <div class="login">
+            <h2>Login</h2>
+            <form method="post">
+                {% csrf_token %}
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">Login</button>
         </form>
         <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
-    </div>
+        
+        {% if messages %}
+        <div class="message-container" >
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
+            {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+</div>
+
 {% endblock %}
+{% block extra_js %}
+<script>
+    // Dismiss message automatically after 5 seconds
+    document.addEventListener("DOMContentLoaded", function () {
+        const alerts = document.querySelectorAll(".alert");
+        
+        // Hide alerts automatically after 5 seconds
+        setTimeout(() => {
+            alerts.forEach(alert => alert.style.display = "none");
+        }, 5000);
+
+        // Add close button functionality
+        alerts.forEach(alert => {
+            const closeButton = document.createElement("button");
+            closeButton.classList.add("close-btn");
+            closeButton.innerHTML = "&times;";
+            closeButton.onclick = () => alert.style.display = "none";
+            alert.appendChild(closeButton);
+        });
+    });
+</script>
+{% endblock %}
+

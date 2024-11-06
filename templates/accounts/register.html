@@ -1,22 +1,81 @@
-<!-- accounts/templates/accounts/register.html -->
 {% load static %}
 
 {% block title %}
     <title>Register - SkyVault</title>
 {% endblock %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}?v2">
 {% endblock %}
 
 {% block content %}
-    <div class="register">
-        <h2>Register</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Register</button>
-        </form>
-        <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+    <div class="auth-container">
+        <div class="register">
+            <h2>Register</h2>
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Username Field -->
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {{ form.username.errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <!-- Password Field -->
+                <label for="password1">Password:</label>
+                <input type="password" id="password1" name="password1" required>
+                {% if form.password1.errors %}
+                    <div class="error-message">
+                        {{ form.password1.errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <!-- Password Confirmation Field -->
+                <label for="password2">Confirm Password:</label>
+                <input type="password" id="password2" name="password2" required>
+                {% if form.password2.errors %}
+                    <div class="error-message">
+                        {{ form.password2.errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <button type="submit">Register</button>
+            </form>
+            <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+        </div>
+
+        <!-- Message Container for Alerts -->
+        {% if messages %}
+        <div class="message-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+    // Dismiss message automatically after 5 seconds
+    document.addEventListener("DOMContentLoaded", function () {
+        const alerts = document.querySelectorAll(".alert");
+
+        // Hide alerts automatically after 5 seconds
+        setTimeout(() => {
+            alerts.forEach(alert => alert.style.display = "none");
+        }, 5000);
+
+        // Add close button functionality
+        alerts.forEach(alert => {
+            const closeButton = document.createElement("button");
+            closeButton.classList.add("close-btn");
+            closeButton.innerHTML = "&times;";
+            closeButton.onclick = () => alert.style.display = "none";
+            alert.appendChild(closeButton);
+        });
+    });
+</script>
+{% endblock %}

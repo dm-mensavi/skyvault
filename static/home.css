@@ -1,0 +1,134 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+/* General Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: white;
+    color: #ffffff;
+}
+
+/* Container Styling */
+.container {
+    text-align: center;
+    background-color: #ffffff;
+    color: #333333;
+    padding: 50px;
+    border-radius: 12px;
+    border: 3px solid rgb(23, 10, 109);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 90%;
+    transform: translateY(-20px); 
+    animation: slideIn 0.8s ease-out;
+}
+
+/* Heading */
+.container h1 {
+    font-size: 36px;
+    color: #2196F3;
+    font-weight: 800;
+    margin-bottom: 20px;
+    animation: fadeIn 1s ease;
+}
+
+/* Introductory Text */
+.container p {
+    font-size: 18px;
+    color: #555555;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* Button Container */
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Buttons */
+.button {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #2196F3;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(33, 150, 243, 0.4);
+    background-color: #1976D2;
+}
+
+/* Info Section */
+.info {
+    text-align: left;
+    margin-top: 30px;
+}
+
+.info h3 {
+    font-size: 24px;
+    color: #333333;
+    font-weight: 700;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #2196F3;
+    display: inline-block;
+}
+
+.info ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.info ul li {
+    font-size: 16px;
+    color: #666666;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 25px;
+}
+
+.info ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #2196F3;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
