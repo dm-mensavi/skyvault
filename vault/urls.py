@@ -5,6 +5,7 @@ urlpatterns = [
     path("", views.vault_home, name="vault_home"),
     path('upload/', views.upload_file, name='upload_file'),
     path('create-folder/', views.create_folder, name='create_folder'),
+    path('folder/<int:folder_id>/', views.view_folder, name='view_folder'),
     path("trash/", views.trash_view, name="trash_view"),
     path("shared/", views.shared_view, name="shared_view"),
     path("search/", views.search_view, name="search_view"),

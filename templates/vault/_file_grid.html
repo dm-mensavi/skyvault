@@ -1,0 +1,25 @@
+<!-- _file_grid.html -->
+{% load custom_filters %}
+<div class="file-grid">
+  <!-- Display Folders -->
+  {% for folder in folders %}
+  <div class="file-item">
+      <a href="{% url 'view_folder' folder.id %}">
+          <span class="material-icons">folder</span>
+          <p>{{ folder.name }}</p>
+      </a>
+  </div>
+  {% endfor %}
+
+  <!-- Display Files -->
+  {% for file in files %}
+  <div class="file-item">
+      {% if file.uploaded_file.name|lower|endswith:".jpg" or file.uploaded_file.name|lower|endswith:".png" %}
+          <img src="{{ file.uploaded_file.url }}" alt="{{ file.name }}" class="file-icon">
+      {% else %}
+          <span class="material-icons">insert_drive_file</span>
+      {% endif %}
+      <p>{{ file.name }}</p>
+  </div>
+  {% endfor %}
+</div>

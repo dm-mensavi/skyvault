@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}<title>My Drive - SkyVault</title>{% endblock %}
+{% block extra_js %}<script src="{% static 'vault/vault.js' %}?=v3"></script>{% endblock %}
+{% block content %}
+<div class="drive-container">
+    <div class="drive-header">
+
+        <!-- Folder Creation Form -->
+        <form method="post" action="{% url 'create_folder' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="folder_name">Create New Folder:</label>
+            <input type="text" name="folder_name" id="folder_name" placeholder="Enter folder name" required>
+            <button type="submit">Create</button>
+        </form>
+
+        <!-- File Upload Form -->
+        <form method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="uploaded-file">Upload File:</label>
+            <input type="file" name="uploaded_file" id="uploaded-file" required>
+            
+            <!-- Folder Selection Dropdown (Optional) -->
+            <label for="folder">Upload to Folder:</label>
+            <select name="folder_id" id="folder">
+                <option value="">Root</option>
+                {% for folder in folders %}
+                    <option value="{{ folder.id }}">{{ folder.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit">Upload</button>
+        </form>
+        
+    </div>
+    
+
+    <!-- File grid display -->
+    <!-- Include the file grid for displaying folders and files -->
+    {% include "vault/_file_grid.html" with folders=folders files=files %}
+
+    <!-- Context menu -->
+    <div class="context-menu">
+        <div class="context-menu-item">Open</div>
+        <div class="context-menu-item">Cut</div>
+        <div class="context-menu-item">Copy</div>
+        <div class="context-menu-item">Paste</div>
+        <div class="context-menu-item">Delete</div>
+        <div class="context-menu-item">Share</div>
+        <div class="context-menu-item">Star</div>
+        <div class="context-menu-item">About</div>
+    </div>
+</div>
+{% endblock %}

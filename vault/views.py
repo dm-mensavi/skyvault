@@ -4,53 +4,89 @@ from django.contrib import messages
 from .models import File, Folder
 from .forms import *
 
+from django.shortcuts import get_object_or_404
+
 @login_required
 def upload_file(request):
-    if request.method == "POST":
-        uploaded_file = request.FILES.get('uploaded_file')
-        if not uploaded_file:
-            messages.error(request, "No file selected.")
-            return redirect('vault_home')
-
-        user_profile = request.user.userprofile
-
-        # Check for file size limits
-        if uploaded_file.size > 40 * 1024 * 1024:  # 40 MB limit
-            messages.error(request, "File exceeds max size of 40 MB.")
-            return redirect('vault_home')
-
-        if user_profile.is_storage_exceeded(uploaded_file.size):
-            messages.error(request, "Storage limit exceeded.")
-            return redirect('vault_home')
-
-        # Save the file and update used space
-        File.objects.create(
-            user=request.user,
-            folder=None,
-            name=uploaded_file.name,
-            uploaded_file=uploaded_file,
-            size=uploaded_file.size,
-        )
-        user_profile.used_space += uploaded_file.size
-        user_profile.save()
-
-        messages.success(request, "File uploaded successfully!")
+    if request.method != "POST":
         return redirect('vault_home')
+
+    uploaded_file = request.FILES.get('uploaded_file')
+    if not uploaded_file:
+        messages.error(request, "No file selected.")
+        return redirect('vault_home')
+
+    folder_id = request.POST.get('folder_id')
+    folder = None
+
+    # Retrieve the folder if folder_id is provided
+    if folder_id:
+        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+
+    user_profile = request.user.userprofile
+
+    # Check for file size limits
+    if uploaded_file.size > 40 * 1024 * 1024:  # 40 MB limit
+        messages.error(request, "File exceeds max size of 40 MB.")
+        return redirect('vault_home')
+
+    # Check if user has exceeded storage limits
+    if user_profile.is_storage_exceeded(uploaded_file.size):
+        messages.error(request, "Storage limit exceeded.")
+        return redirect('vault_home')
+
+    # Check if a file with the same name already exists in the selected folder
+    if File.objects.filter(user=request.user, name=uploaded_file.name, folder=folder).exists():
+        messages.error(request, "A file with this name already exists in the selected folder.")
+        return redirect('vault_home')
+
+    # Save the file and update user's used storage space
+    File.objects.create(
+        user=request.user,
+        folder=folder,  # Assign to the selected folder or None for root level
+        name=uploaded_file.name,
+        uploaded_file=uploaded_file,
+        size=uploaded_file.size,
+    )
+    user_profile.used_space += uploaded_file.size
+    user_profile.save()
+
+    messages.success(request, "File uploaded successfully!")
     return redirect('vault_home')
+
 
 
 @login_required
 def create_folder(request):
-    if request.method == "POST":
-        folder_name = request.POST.get('folder_name')
-        if not folder_name:
-            messages.error(request, "Folder name cannot be empty.")
-            return redirect('vault_home')
-
-        Folder.objects.create(user=request.user, name=folder_name)
-        messages.success(request, "Folder created successfully!")
+    if request.method != "POST":
         return redirect('vault_home')
-    return redirect('vault_home')
+
+    folder_name = request.POST.get('folder_name')
+    parent_folder_id = request.POST.get('parent_folder_id')
+    parent_folder = Folder.objects.filter(id=parent_folder_id, user=request.user).first() if parent_folder_id else None
+
+    if not folder_name:
+        messages.error(request, "Folder name cannot be empty.")
+        return redirect('vault_home')
+
+    Folder.objects.create(user=request.user, name=folder_name, parent_folder=parent_folder)
+    messages.success(request, "Folder created successfully!")
+    
+    return redirect('view_folder' if parent_folder else 'vault_home', folder_id=parent_folder_id)
+
+
+
+@login_required
+def view_folder(request, folder_id):
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    subfolders = folder.subfolders.all()  # Retrieve subfolders within this folder
+    files = folder.files.all()            # Retrieve files within this folder
+
+    return render(request, 'vault/view_folder.html', {
+        'folder': folder,
+        'subfolders': subfolders,
+        'files': files,
+    })
 
 
 @login_required
@@ -85,7 +121,7 @@ def vault_home(request):
     folder_form = FolderForm()
     file_form = FileUploadForm()
 
-    return render(request, 'vault/home.html', {
+    return render(request, 'vault/vault.html', {
         'folders': folders,
         'files': files,
         'folder_form': folder_form,

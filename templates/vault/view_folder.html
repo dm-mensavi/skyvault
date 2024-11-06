@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}<title>{{ folder.name }} - SkyVault</title>{% endblock %}
+{% block extra_js %}<script src="{% static 'vault/vault.js' %}?=v3"></script>{% endblock %}
+{% block content %}
+<div class="drive-container">
+    <h2>{{ folder.name }}</h2> <!-- Display the folder name -->
+
+    <div class="drive-header">
+        <!-- Folder Creation Form -->
+        <form method="post" action="{% url 'create_folder' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="folder_name">Create New Folder:</label>
+            <input type="text" name="folder_name" id="folder_name" placeholder="Enter folder name" required>
+            <input type="hidden" name="parent_folder_id" value="{{ folder.id }}">
+            <button type="submit">Create</button>
+        </form>
+
+        <!-- File Upload Form -->
+        <form method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="uploaded-file">Upload File:</label>
+            <input type="file" name="uploaded_file" id="uploaded-file" required>
+            <input type="hidden" name="folder_id" value="{{ folder.id }}">
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+
+    <!-- Include the file grid for displaying folders and files within this folder -->
+    {% include "vault/_file_grid.html" with folders=subfolders files=files %}
+</div>
+{% endblock %}
