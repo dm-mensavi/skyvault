@@ -16,8 +16,8 @@ class File(models.Model):
     name = models.CharField(max_length=255)
     uploaded_file = models.FileField(upload_to='user_files/')
     size = models.PositiveIntegerField()  # Size in bytes
-    trashed = models.BooleanField(default=False)  # For Trash functionality
-    shared_with = models.ManyToManyField(User, related_name='shared_files', blank=True)  # For Shared functionality
+    trashed = models.BooleanField(default=False)
+    shared_with = models.ManyToManyField(User, related_name='shared_files', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     starred = models.BooleanField(default=False)
 

@@ -2,25 +2,28 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import File, Folder
+from .forms import *
 
 @login_required
 def upload_file(request):
     if request.method == "POST":
-        uploaded_file = request.FILES['uploaded_file']
-        
-        # Retrieve the user profile
+        uploaded_file = request.FILES.get('uploaded_file')
+        if not uploaded_file:
+            messages.error(request, "No file selected.")
+            return redirect('vault_home')
+
         user_profile = request.user.userprofile
-        
-        # Check if the file size exceeds storage limit or max file size
-        if uploaded_file.size > 40 * 1024 * 1024:
+
+        # Check for file size limits
+        if uploaded_file.size > 40 * 1024 * 1024:  # 40 MB limit
             messages.error(request, "File exceeds max size of 40 MB.")
             return redirect('vault_home')
-        
+
         if user_profile.is_storage_exceeded(uploaded_file.size):
             messages.error(request, "Storage limit exceeded.")
             return redirect('vault_home')
-        
-        # Save file and update used space
+
+        # Save the file and update used space
         File.objects.create(
             user=request.user,
             folder=None,
@@ -30,7 +33,7 @@ def upload_file(request):
         )
         user_profile.used_space += uploaded_file.size
         user_profile.save()
-        
+
         messages.success(request, "File uploaded successfully!")
         return redirect('vault_home')
     return redirect('vault_home')
@@ -40,6 +43,10 @@ def upload_file(request):
 def create_folder(request):
     if request.method == "POST":
         folder_name = request.POST.get('folder_name')
+        if not folder_name:
+            messages.error(request, "Folder name cannot be empty.")
+            return redirect('vault_home')
+
         Folder.objects.create(user=request.user, name=folder_name)
         messages.success(request, "Folder created successfully!")
         return redirect('vault_home')
@@ -48,10 +55,44 @@ def create_folder(request):
 
 @login_required
 def vault_home(request):
-    # Main vault home where files are displayed
+    folders = Folder.objects.filter(user=request.user)
     files = File.objects.filter(user=request.user, trashed=False)
-    return render(request, 'vault/vault.html', {'files': files})
 
+    if request.method == "POST":
+        if 'folder_name' in request.POST:
+            folder_form = FolderForm(request.POST)
+            if folder_form.is_valid():
+                new_folder = folder_form.save(commit=False)
+                new_folder.user = request.user
+                new_folder.save()
+                messages.success(request, "Folder created successfully!")
+                return redirect('vault_home')
+            else:
+                messages.error(request, "Error creating folder. Please try again.")
+        
+        elif 'uploaded_file' in request.FILES:
+            file_form = FileUploadForm(request.POST, request.FILES)
+            if file_form.is_valid():
+                new_file = file_form.save(commit=False)
+                new_file.user = request.user
+                new_file.size = request.FILES['uploaded_file'].size
+                new_file.save()
+                messages.success(request, "File uploaded successfully!")
+                return redirect('vault_home')
+            else:
+                messages.error(request, "Error uploading file. Please try again.")
+    
+    folder_form = FolderForm()
+    file_form = FileUploadForm()
+
+    return render(request, 'vault/home.html', {
+        'folders': folders,
+        'files': files,
+        'folder_form': folder_form,
+        'file_form': file_form,
+    })
+
+    
 @login_required
 def trash_view(request):
     trashed_files = File.objects.filter(user=request.user, trashed=True)
