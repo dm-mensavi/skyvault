@@ -18,7 +18,13 @@
           {% if file.uploaded_file.name|endswith:".jpg" or file.uploaded_file.name|endswith:".png" %}
               <img src="{{ file.uploaded_file.url }}" alt="{{ file.name }}" class="file-icon">
           {% else %}
-              <span class="material-icons">insert_drive_file</span>
+          <span class="material-icons">
+            {% if file.starred %}
+                star
+            {% else %}
+                insert_drive_file
+            {% endif %}
+        </span>        
           {% endif %}
           <p>{{ file.name }}</p>
       </a>

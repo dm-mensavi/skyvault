@@ -1,16 +1,20 @@
 {% extends 'base.html' %}
 
-{% block title %}Starred Files{% endblock %}
-
 {% block content %}
-<h2>Starred Files</h2>
-<div class="file-list">
-    {% for file in files %}
-        <div class="file-item">
-            <p>{{ file.name }}</p>
-        </div>
-    {% empty %}
-        <p>No starred files available.</p>
+<h2>Starred Items</h2>
+<div class="file-grid">
+    {% for folder in starred_folders %}
+    <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
+        <span class="material-icons">folder</span>
+        <p>{{ folder.name }}</p>
+    </div>
+    {% endfor %}
+
+    {% for file in starred_files %}
+    <div class="file-item" data-id="{{ file.id }}" data-type="file">
+        <span class="material-icons">insert_drive_file</span>
+        <p>{{ file.name }}</p>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}

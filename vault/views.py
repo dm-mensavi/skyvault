@@ -46,35 +46,38 @@ def delete_folder(request, folder_id):
 
 
 # Restore a file or folder
+@login_required
 def restore_item(request, item_type, item_id):
     if request.method == 'POST':
         if item_type == 'folder':
-            item = get_object_or_404(Folder, id=item_id, is_trashed=True)
+            item = get_object_or_404(Folder, id=item_id, user=request.user, trashed=True)
         elif item_type == 'file':
-            item = get_object_or_404(File, id=item_id, is_trashed=True)
+            item = get_object_or_404(File, id=item_id, user=request.user, trashed=True)
         else:
-            return JsonResponse({'success': False, 'error': 'Invalid item type'})
+            return JsonResponse({'success': False, 'error': 'Invalid item type'}, status=400)
 
-        item.is_trashed = False
+        # Restore the item by marking it as not trashed
+        item.trashed = False
         item.save()
-        return JsonResponse({'success': True})
+        return JsonResponse({'success': True, 'message': f'{item_type.capitalize()} restored successfully.'})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
-# Permanently delete a file or folder
+
+@login_required
 def delete_permanent_item(request, item_type, item_id):
     if request.method == 'POST':
         if item_type == 'folder':
-            item = get_object_or_404(Folder, id=item_id, is_trashed=True)
+            item = get_object_or_404(Folder, id=item_id, user=request.user, trashed=True)
         elif item_type == 'file':
-            item = get_object_or_404(File, id=item_id, is_trashed=True)
+            item = get_object_or_404(File, id=item_id, user=request.user, trashed=True)
         else:
-            return JsonResponse({'success': False, 'error': 'Invalid item type'})
+            return JsonResponse({'success': False, 'error': 'Invalid item type'}, status=400)
 
-        item.delete()
-        return JsonResponse({'success': True})
+        item.delete()  # Permanently delete the item
+        return JsonResponse({'success': True, 'message': f'{item_type.capitalize()} permanently deleted.'})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 
 @login_required
@@ -382,3 +385,27 @@ def storage_info(request):
         'used_percentage': (total_storage / max_storage) * 100 if max_storage else 0,
     }
     return render(request, 'vault/storage_info.html', context)
+
+@login_required
+def toggle_star(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        item_id = data.get("item_id")
+        item_type = data.get("item_type")
+
+        # Retrieve the file or folder based on the item type
+        if item_type == "file":
+            item = get_object_or_404(File, id=item_id, user=request.user)
+        elif item_type == "folder":
+            item = get_object_or_404(Folder, id=item_id, user=request.user)
+        else:
+            return JsonResponse({"success": False, "error": "Invalid item type"})
+
+        # Toggle the starred status
+        item.starred = not item.starred
+        item.save()
+
+        status = "starred" if item.starred else "unstarred"
+        return JsonResponse({"success": True, "message": f"Item successfully {status}."})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)

@@ -127,7 +127,9 @@ body {
 /* Responsive Logo Font Size */
 @media (max-width: 768px) {
   .logo-text {
-    font-size: 18px; /* Smaller font size on mobile */
+    font-size: 8px; /* Smaller font size on mobile */
+    font-weight: 300;
+    display: none!important;
   }
 }
 
@@ -165,7 +167,7 @@ body {
   color: #5f6368;
 }
 
-.profile .avatar {
+.avatar {
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -208,7 +210,7 @@ body {
 
   .sidebar.collapsed {
     left: 0;
-    width: 60px;
+    width: 150px;
     transition: left 0.3s ease, width 0.3s ease;
   }
 
@@ -866,3 +868,104 @@ body {
 
 /* $Styles for settings */
 /* $Styles for settings */
+
+/* Main Content and Top Bar */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #f8f9fa; /* Light background for content area */
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* Hamburger Menu Icon */
+.hamburger {
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+/* Search Input */
+.search-input {
+  flex: 1;
+  padding: 8px 15px;
+  margin: 0 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  font-size: 16px;
+}
+/* Profile Section */
+.profile {
+  display: flex;
+  align-items: center; /* Center items vertically */
+  gap: 8px; /* Adjust spacing as needed */
+}
+
+/* Profile Username */
+.profile a {
+  text-decoration: none;
+  font-size: 16px;
+  color: #343a40;
+  font-weight: 500;
+  display: flex;
+  align-items: center; /* Center align username with icons */
+}
+
+/* Avatar (Profile Picture or Icon) */
+.avatar {
+  width: 35px; /* Adjust size as needed */
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center content inside the avatar */
+  background-color: #e9ecef;
+}
+
+/* Icon Styling */
+.profile .material-icons {
+  font-size: 34px;
+  color: #007bff; /* Blue color for icons */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the icon within its container */
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* Hover Effect for Icons */
+.profile .material-icons:hover {
+  color: #0056b3;
+}
+
+/* Adjust Container if Needed */
+.profile .material-icons, .avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Ensure both icon and avatar are centered */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .top-bar {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  .search-input {
+      margin: 10px 0;
+      width: 100%;
+  }
+}

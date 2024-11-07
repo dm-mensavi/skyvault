@@ -13,6 +13,7 @@ urlpatterns = [
     path("search/", views.search_view, name="search_view"),
     path("recent/", views.recent_files, name="recent_files"),
     path("starred/", views.starred_files, name="starred_files"),
+    path('toggle-star/', views.toggle_star, name='toggle_star'),
     path("storage/", views.storage_info, name="storage_info"),
     path('delete-file/<int:file_id>/', views.delete_file, name='delete_file'),
     path('delete-folder/<int:folder_id>/', views.delete_folder, name='delete_folder'),

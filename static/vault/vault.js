@@ -183,6 +183,41 @@ document.addEventListener("DOMContentLoaded", function () {
   let selectedItemId = null;
   let selectedItemType = null;
 
+    // Function to display alerts in the message container
+    function showAlert(message, type = 'info') {
+        if (messageContainer) {
+            const alertDiv = document.createElement('div');
+            alertDiv.classList.add('alert', `alert-${type}`);
+            alertDiv.textContent = message;
+            messageContainer.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000); // Auto-remove after 5 seconds
+        }
+    }
+
+    // Event listener for "Star" functionality in the context menu
+    document.querySelector("[data-action='star']").addEventListener("click", function () {
+        if (selectedItemId && selectedItemType) {
+            fetch(`/vault/toggle-star/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    item_id: selectedItemId,
+                    item_type: selectedItemType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, data.success ? "success" : "danger");
+                if (data.success) location.reload();  // Reload to reflect the updated star status
+            })
+            .catch(error => showAlert("An error occurred while toggling star status.", "danger"));
+        }
+        hideContextMenu();
+    });
+
    document.querySelector("[data-action='delete']").addEventListener("click", function () {
         if (selectedItemId && selectedItemType) {
             if (confirm(`Are you sure you want to delete this ${selectedItemType}?`)) {
@@ -376,3 +411,6 @@ document.addEventListener("DOMContentLoaded", function () {
 //!Copy, Cut, and Paste Actions
 //!Copy, Cut, and Paste Actions
 
+//->Handle star
+//->Handle star
+//->Handle star
