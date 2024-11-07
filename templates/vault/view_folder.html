@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}<title>{{ folder.name }} - SkyVault</title>{% endblock %}
+{% block title %}{{ folder.name }} - SkyVault{% endblock %}
 {% block extra_js %}<script src="{% static 'vault/vault.js' %}?=v4"></script>{% endblock %}
 {% block content %}
 <div class="drive-container" data-folder-id="{{ folder.id|default_if_none:'' }}">
