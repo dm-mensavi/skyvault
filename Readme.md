@@ -1,161 +1,116 @@
 
 ---
 
-# 🌌 **SkyVault**
+# 🌌 SkyVault
 
-Welcome to **SkyVault**! A Django-based application designed to bring you seamless file management and storage capabilities. SkyVault combines an intuitive interface with powerful backend functionality, making it easy to organize and access your files. 
-
-<br>
-
-## ✨ **Features**
-
-- **📂 File Management:** Upload, organize, and access your files with ease.
-- **⭐ Starred Files & Folders:** Mark important files and folders for quick access.
-- **🗑️ Trash Bin:** Deleted files and folders are stored safely in the trash until permanently removed.
-- **👥 Shared Files:** Easily share files with other users.
-
-<br>
-
-## 🚀 **Getting Started**
-
-You can run SkyVault in two ways:
-
-1. **Locally** using Django’s development server (great for development and testing).
-2. **With Docker** for a containerized and reproducible environment (ideal for production-like setups).
-
-<br>
-
-## 🛠️ **Requirements**
-
-Ensure you have the following installed:
-
-- **Python 3.8+** 🐍
-- **PostgreSQL** 🐘
-- **Docker** (for the Docker setup) 🐳
-- **Docker Compose** (for managing multi-container applications)
-
-<br>
+SkyVault is a file management and storage application that brings cloud-like functionalities to your server. Manage, organize, and securely store files and folders with ease. This project allows users to perform actions like uploading, deleting, restoring, and starring files, along with intuitive navigation features such as context menus and a dashboard overview.
 
 ---
 
-## ⚙️ **Installation**
+## 🚀 **Features**
 
-### Step 1: Clone the Repository
+- **Upload & Manage Files**: Seamlessly upload, organize, and manage files and folders.
+- **Context Menu**: Right-click on files and folders to access quick actions.
+- **Dashboard Overview**: Get an insight into storage usage and recent activity.
+- **Trash & Restore**: Deleted items are stored in the Trash for easy recovery.
+- **Starred Items**: Mark important files and folders to access them quickly.
 
-```bash
-git clone https://github.com/yourusername/skyvault.git
-cd skyvault
-```
+---
 
-### Step 2: Environment Configuration
+## 🛠️ **Getting Started**
 
-1. Create a `.env` file in the root directory.
-2. Add the following environment variables to it:
+SkyVault can be run in two ways: using Docker or directly on your local environment.
 
-```plaintext
-SECRET_KEY=your-secret-key
+### Option 1: Run with Docker
+
+1. Ensure Docker is installed on your machine.
+2. Build and run the Docker containers:
+   ```bash
+   docker-compose up --build
+   ```
+3. Access the application at [http://localhost:8000](http://localhost:8000).
+
+### Option 2: Run Locally (Development Mode)
+
+1. **Install Dependencies**:
+   - Ensure Python and pip are installed on your machine.
+   - Install dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+2. **Set Up Database**:
+   - If running locally, use the SQLite database by uncommenting the relevant section in `settings.py`.
+
+3. **Run Migrations**:
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **Create Superuser** (optional for admin access):
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+5. **Start the Development Server**:
+   ```bash
+   python manage.py runserver
+   ```
+
+6. Access the application at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+---
+
+## 🖼️ **Screenshots**
+
+Take a look at some screenshots of SkyVault in action:
+
+### 1️⃣ **Home Screen**
+![Home](static/images/Home.png)
+
+> *The main interface where you can see your files and folders.*
+
+### 2️⃣ **Dashboard**
+![Dashboard](static/images/Dashboard.png)
+
+> *Get an overview of your storage usage and recent activity.*
+
+### 3️⃣ **Context Menu**
+![Context Menu](static/images/Context-menu.png)
+
+> *Right-click to see various actions you can perform on files and folders.*
+
+### 4️⃣ **Trash**
+![Trash](static/images/Trash.png)
+
+> *Deleted items are stored here, allowing you to restore or permanently delete them.*
+
+### 5️⃣ **Info Panel**
+![Info](static/images/Info.png)
+
+> *Access detailed information and usage statistics for your account.*
+
+---
+
+## 📜 **Environment Variables**
+
+To configure the project, create a `.env` file with the following environment variables:
+
+```env
+SECRET_KEY=your_secret_key
 DEBUG=True
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=db-skyvault
-DB_PORT=5432
-ALLOWED_HOSTS=127.0.0.1, localhost
+DB_NAME=your_database_name
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_HOST=your_database_host
+DB_PORT=your_database_port
+ALLOWED_HOSTS=localhost,127.0.0.1
 ```
-
-<br>
 
 ---
 
-## 🐍 **Running Locally**
+## 📝 **License**
 
-### 1️⃣ Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2️⃣ Make Migrations and Migrate Database
-
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 3️⃣ Run the Development Server
-
-```bash
-python manage.py runserver
-```
-
-Your application should now be live at **`http://127.0.0.1:8000`**!
-
----
-
-<br>
-
-## 🐳 **Running with Docker**
-
-This option allows you to run SkyVault as a Docker container.
-
-### 1️⃣ Build and Start the Containers
-
-Run the following command to build and start the Docker containers:
-
-```bash
-docker-compose up --build
-```
-
-### 2️⃣ Initial Setup (First-Time Run)
-
-Once the containers are running, open a new terminal and run the following command to create migrations and a superuser:
-
-```bash
-docker-compose exec web-skyvault python manage.py migrate
-docker-compose exec web-skyvault python manage.py createsuperuser
-```
-
-Your application will be live at **`http://localhost:8000`**.
-
----
-
-<br>
-
-## 📂 **File Structure**
-
-- **`/vault`** - Core app handling file management and storage functionalities.
-- **`/accounts`** - Handles user registration, authentication, and profiles.
-- **`/settings`** - Manages application configurations for users.
-- **`/dashboard`** - Displays storage summary and analytics.
-  
-<br>
-
----
-
-## 🔗 **Accessing the Admin Panel**
-
-To manage users and files directly, access the Django admin panel:
-
-1. Go to **`http://127.0.0.1:8000/admin/`** for local or **`http://localhost:8000/admin/`** for Docker.
-2. Use the superuser credentials created during setup.
-
-<br>
-
----
-
-## 🙌 **Contributing**
-
-1. **Fork** the repository.
-2. **Clone** your fork and create a branch.
-3. Submit a **pull request** detailing your changes.
-
-<br>
-
-## 📜 **License**
-
-This project is licensed under the MIT License. 
-
-Happy coding! ✨
+SkyVault is licensed under the MIT License.
 
 --- 
-
