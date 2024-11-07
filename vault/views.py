@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.core.files.base import ContentFile
 import json
 
+
 # views.py
 @login_required
 def delete_file(request, file_id):
@@ -399,13 +400,20 @@ def toggle_star(request):
         elif item_type == "folder":
             item = get_object_or_404(Folder, id=item_id, user=request.user)
         else:
-            return JsonResponse({"success": False, "error": "Invalid item type"})
+            return JsonResponse({"success": False, "message": "Invalid item type"}, status=400)
+
+        # Print current status before changing
+        print(f"Current starred status for {item_type} {item_id}: {item.starred}")
 
         # Toggle the starred status
         item.starred = not item.starred
         item.save()
 
-        status = "starred" if item.starred else "unstarred"
-        return JsonResponse({"success": True, "message": f"Item successfully {status}."})
+        # Print new status to confirm change
+        print(f"New starred status for {item_type} {item_id}: {item.starred}")
 
-    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+        status = "starred" if item.starred else "unstarred"
+        return JsonResponse({"success": True, "message": f"{item_type.capitalize()} successfully {status}."})
+
+    return JsonResponse({"success": False, "message": "Invalid request method"}, status=400)
+

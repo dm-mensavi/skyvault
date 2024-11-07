@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
@@ -21,3 +23,6 @@ urlpatterns = [
     path('delete-permanent/<str:item_type>/<int:item_id>/', views.delete_permanent_item, name='delete_permanent_item'),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
