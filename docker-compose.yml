@@ -13,6 +13,7 @@ services:
       - DB_PASSWORD=postgres
       - DB_HOST=db-skyvault
       - DB_PORT=5432
+      - DJANGO_ENV=docker  # Added this line to indicate the environment
 
   db-skyvault:
     image: postgres:latest

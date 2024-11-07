@@ -3,6 +3,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Set DJANGO_ENV for Docker environment
+export DJANGO_ENV=${DJANGO_ENV:-docker}
+
 # Function to wait for the PostgreSQL database to be ready
 function wait_for_db() {
   until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"; do
