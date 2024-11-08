@@ -28,7 +28,7 @@ SkyVault can be run in two ways: using Docker or directly on your local environm
    ```bash
    docker-compose up --build
    ```
-3. Access the application at [http://localhost:8000](http://localhost:8000).
+3. Access the application at [http://localhost:8000](http://localhost:8000) or  [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 ### Option 2: Run Locally (Development Mode)
 
