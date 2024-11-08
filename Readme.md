@@ -30,34 +30,54 @@ SkyVault can be run in two ways: using Docker or directly on your local environm
    ```
 3. Access the application at [http://localhost:8000](http://localhost:8000) or  [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
+---
+
 ### Option 2: Run Locally (Development Mode)
 
-1. **Install Dependencies**:
-   - Ensure Python and pip are installed on your machine.
-   - Install dependencies:
-     ```bash
-     pip install -r requirements.txt
-     ```
+1. **Install Python and pip:**
+   Ensure Python and pip are installed on your machine. [Download Python here](https://www.python.org/downloads/), if needed.
 
-2. **Set Up Database**:
-   - If running locally, use the SQLite database by uncommenting the relevant section in `settings.py`.
+2. **Create and Activate a Virtual Environment:**
+   ```bash
+   python -m venv .venv
+   ```
 
-3. **Run Migrations**:
+   - **Activate the virtual environment:**
+     - **Windows:** 
+       ```bash
+       .venv\Scripts\activate
+       ```
+     - **MacOS/Linux:**
+       ```bash
+       source .venv/bin/activate
+       ```
+
+3. **Install Dependencies:**
+   With the virtual environment activated, install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set Up Database:**
+   If running locally, use the SQLite database by uncommenting the relevant section in `settings.py`.
+
+5. **Run Migrations:**
    ```bash
    python manage.py migrate
    ```
 
-4. **Create Superuser** (optional for admin access):
+6. **Create a Superuser (optional for admin access):**
    ```bash
    python manage.py createsuperuser
    ```
 
-5. **Start the Development Server**:
+7. **Start the Development Server:**
    ```bash
    python manage.py runserver
    ```
 
-6. Access the application at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+8. **Access the Application:**
+   Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000) to access the application.
 
 ---
 
