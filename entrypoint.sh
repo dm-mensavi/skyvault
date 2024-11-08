@@ -21,13 +21,7 @@ wait_for_db
 echo "Running migrations..."
 python manage.py migrate
 
-# Create a superuser if not already created
-echo "Creating superuser..."
-echo "from django.contrib.auth import get_user_model; \
-      User = get_user_model(); \
-      User.objects.filter(username='admin').exists() or \
-      User.objects.create_superuser('admin', 'admin@example.com', 'password')" | python manage.py shell
-
 # Start the Django server
 echo "Starting server..."
 exec "$@"
+echo "Server running on port 127.0.0.1:8000 and localhost:8000"
