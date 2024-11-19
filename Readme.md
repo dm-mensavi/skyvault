@@ -1,120 +1,109 @@
 
 ---
 
-# 🌌 SkyVault
+# 🌌 **SkyVault**
 
-SkyVault is a file management and storage application that brings cloud-like functionalities to your server. Manage, organize, and securely store files and folders with ease. This project allows users to perform actions like uploading, deleting, restoring, and starring files, along with intuitive navigation features such as context menus and a dashboard overview.
+SkyVault is a robust file management and storage application that offers cloud-like functionalities right on your server. Designed for efficiency and ease of use, SkyVault lets you manage, organize, and securely store files and folders. Key features include uploading, restoring, starring, and navigating files with an intuitive dashboard overview.
 
 ---
 
 ## 🚀 **Features**
 
-- **Upload & Manage Files**: Seamlessly upload, organize, and manage files and folders.
-- **Context Menu**: Right-click on files and folders to access quick actions.
-- **Dashboard Overview**: Get an insight into storage usage and recent activity.
-- **Trash & Restore**: Deleted items are stored in the Trash for easy recovery.
-- **Starred Items**: Mark important files and folders to access them quickly.
+- **File Management**: Upload, delete, and organize files and folders with ease.
+- **Context Menu**: Access quick actions (e.g., delete, rename, star) via a right-click menu.
+- **Dashboard Insights**: View storage usage, quota details, and recent activity in one glance.
+- **Trash Bin & Restore**: Recover accidentally deleted files from the Trash folder.
+- **Starred Items**: Mark and prioritize important files and folders for quick access.
+- **Enhanced Sharing**: Share files and folders seamlessly with others.
 
 ---
 
 ## 🛠️ **Getting Started**
 
-SkyVault can be run in two ways: using Docker or directly on your local environment.
-
-### Option 1: Run with Docker
-
-1. Ensure Docker is installed on your machine.
-2. Build and run the Docker containers:
-   ```bash
-   docker-compose up --build
-   ```
-3. Access the application at [http://localhost:8000](http://localhost:8000) or  [http://127.0.0.1:8000](http://127.0.0.1:8000).
+SkyVault supports two ways to run the application: using Docker or directly in a local development environment.
 
 ---
 
-### Option 2: Run Locally (Development Mode)
+### Option 1: **Run with Docker**
 
-1. **Install Python and pip:**
-   Ensure Python and pip are installed on your machine. [Download Python here](https://www.python.org/downloads/), if needed.
+1. **Install Docker**:
+   Ensure Docker is installed on your machine. [Download Docker here](https://www.docker.com/get-started).
 
-2. **Create and Activate a Virtual Environment:**
+2. **Set Up Docker Environment**:
+   - Build and run the Docker containers:
+     ```bash
+     docker-compose up --build
+     ```
+
+3. **Access the Application**:
+   - Visit [http://localhost:8000](http://localhost:8000) or [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
+
+---
+
+### Option 2: **Run Locally (Development Mode)**
+
+1. **Install Prerequisites**:
+   - Python 3.10 or higher
+   - Pip (Python package manager)
+
+2. **Set Up a Virtual Environment**:
    ```bash
    python -m venv .venv
    ```
 
-   - **Activate the virtual environment:**
-     - **Windows:** 
+   - **Activate the environment**:
+     - **Windows**:
        ```bash
        .venv\Scripts\activate
        ```
-     - **MacOS/Linux:**
+     - **Mac/Linux**:
        ```bash
        source .venv/bin/activate
        ```
 
-3. **Install Dependencies:**
-   With the virtual environment activated, install the required dependencies:
+3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Set Up Database:**
-   If running locally, use the SQLite database by uncommenting the relevant section in `settings.py`.
+4. **Set Up the Database**:
+   - For local development, the default SQLite database is preconfigured.
+   - Update `.env` if you are connecting to an external database.
 
-5. **Run Migrations:**
+5. **Run Migrations**:
    ```bash
    python manage.py migrate
    ```
 
-6. **Create a Superuser (optional for admin access):**
+6. **Create an Admin Account (Optional)**:
    ```bash
    python manage.py createsuperuser
    ```
 
-7. **Start the Development Server:**
+7. **Start the Application**:
    ```bash
    python manage.py runserver
    ```
 
-8. **Access the Application:**
-   Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000) to access the application.
+8. **Access the App**:
+   Open your browser and navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 ---
 
-## 🖼️ **Screenshots**
+## 🛠️ **Project Architecture**
 
-Take a look at some screenshots of SkyVault in action:
-
-### 1️⃣ **Home Screen**
-![Home](static/images/Home.png)
-
-> *The main interface where you can see your files and folders.*
-
-### 2️⃣ **Dashboard**
-![Dashboard](static/images/Dashboard.png)
-
-> *Get an overview of your storage usage and recent activity.*
-
-### 3️⃣ **Context Menu**
-![Context Menu](static/images/Context-menu.png)
-
-> *Right-click to see various actions you can perform on files and folders.*
-
-### 4️⃣ **Trash**
-![Trash](static/images/Trash.png)
-
-> *Deleted items are stored here, allowing you to restore or permanently delete them.*
-
-### 5️⃣ **Info Panel**
-![Info](static/images/Info.png)
-
-> *Access detailed information and usage statistics for your account.*
+SkyVault is modular and organized for scalability:
+- **`accounts`**: Handles user authentication, signup, and login.
+- **`dashboard`**: Provides insights into storage usage and file statistics.
+- **`settings`**: Manages user profiles, data updates, and profile picture uploads.
+- **`vault`**: Core functionality for file and folder operations, including upload, sharing, and deletion.
+- **`notifications`**: Displays user alerts for various events (e.g., successful uploads).
 
 ---
 
 ## 📜 **Environment Variables**
 
-To configure the project, create a `.env` file with the following environment variables:
+SkyVault uses environment variables for configuration. Create a `.env` file in the root directory with the following format:
 
 ```env
 SECRET_KEY=your_secret_key
@@ -129,8 +118,57 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 
 ---
 
-## 📝 **License**
+## 📊 **Key Screens**
+
+### **Dashboard Overview**
+> See your storage usage and recent activities in a clean interface.
+![Dashboard](static/images/Dashboard.png)
+
+---
+
+### **File Management**
+> Manage files and folders with an intuitive interface.
+![File Management](static/images/Home.png)
+
+---
+
+### **Context Menu**
+> Right-click for quick actions like delete, rename, and share.
+![Context Menu](static/images/Context-menu.png)
+
+---
+
+### **Trash Bin**
+> Restore or permanently delete files with ease.
+![Trash](static/images/Trash.png)
+
+---
+
+### **Info Panel**
+> View detailed statistics about your account and storage usage.
+![Info](static/images/Info.png)
+
+---
+
+## 🛠️ **Docker Configuration**
+
+SkyVault includes both a `docker-compose.yml` and `Dockerrun.aws.json` for flexible deployment:
+
+- **`docker-compose.yml`**: Used for local development and testing.
+- **`Dockerrun.aws.json`**: Designed for deployment to AWS Elastic Beanstalk.
+
+### Running in Docker
+```bash
+docker-compose up --build
+```
+
+### Deploying to AWS
+Use the `Dockerrun.aws.json` file to deploy to AWS Elastic Beanstalk. The file is already configured to use your Docker Hub image.
+
+---
+
+## 📜 **License**
 
 SkyVault is licensed under the MIT License.
 
---- 
+---
