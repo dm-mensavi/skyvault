@@ -24,4 +24,4 @@ python manage.py migrate
 # Start the Django server
 echo "Starting server..."
 exec "$@"
-echo "Server running on port 127.0.0.1:8000 and localhost:8000"
+echo "Server running on 127.0.0.1:8000 and localhost:8000"
