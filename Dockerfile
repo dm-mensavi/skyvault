@@ -14,11 +14,15 @@ RUN apt-get update && apt-get install -y postgresql-client
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
+# Copy the entrypoint script and grant execution permissions
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Copy the application code
 COPY . /app/
 
-# Expose the application port
-EXPOSE 8000
+# Run the entrypoint script by default
+ENTRYPOINT ["/app/entrypoint.sh"]
 
-# Run migrations and start the server
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# Run Django on 0.0.0.0:8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

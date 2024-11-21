@@ -6,32 +6,23 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db-skyvault:
-        condition: service_healthy
+      - db-skyvault
     environment:
-      DB_NAME: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: db-skyvault
-      DB_PORT: 5432
-      DJANGO_ENV: docker
-    volumes:
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db-skyvault
+      - DB_PORT=5432
+      - DJANGO_ENV=docker  # Added this line to indicate the environment
 
   db-skyvault:
     image: postgres:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
 volumes:
   postgres_data:
