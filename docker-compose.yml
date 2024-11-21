@@ -8,21 +8,21 @@ services:
     depends_on:
       - db-skyvault
     environment:
-      - DB_NAME=postgres
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_HOST=db-skyvault
-      - DB_PORT=5432
-      - DJANGO_ENV=docker  # Added this line to indicate the environment
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db-skyvault
+      DB_PORT: 5432
+      DJANGO_ENV: docker
 
   db-skyvault:
     image: postgres:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
 
 volumes:
   postgres_data:
