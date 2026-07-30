@@ -1,0 +1,74 @@
+# Implementation Plan — Phase 1: Auto-tagging & Summarization
+
+Implement document text extraction (PDF & Plaintext), wire the Claude AI pipeline task to auto-generate summaries, tag chips, and suggested folders, and surface live AI insights inside the Google Drive UI preview modal and Django admin.
+
+---
+
+## Proposed Changes
+
+### 1 — Text Extractors (`ai_features/extractors/`)
+
+#### [NEW] `ai_features/extractors/__init__.py`
+#### [NEW] `ai_features/extractors/base.py`
+
+- Dispatcher `extract_text(file_path: str, extension: str) -> str | None`: routes files to appropriate extractor by extension.
+
+#### [NEW] `ai_features/extractors/pdf.py`
+
+- Uses `pdfplumber` to extract clean page text from `.pdf` files.
+
+#### [NEW] `ai_features/extractors/plaintext.py`
+
+- Reads `.txt`, `.md`, `.json`, `.py`, `.js`, `.html`, `.css`, `.csv`, `.xml` files with encoding detection (`utf-8`, `latin-1`).
+
+---
+
+### 2 — Background Analysis Pipeline (`ai_features/tasks.py`)
+
+#### [MODIFY] [tasks.py](file:///c:/Programs/Python/skyvault/ai_features/tasks.py)
+
+- `analyze_file(file_id: int)`:
+  1. Retrieves `File` record and sets `FileAnalysis.status = PROCESSING`.
+  2. Runs text extraction. If no text or unsupported format -> sets status `SKIPPED`.
+  3. Sends text snippet (up to 8,000 characters) to Claude using `generate_json()`.
+  4. Saves `summary`, `tags` (lowercase list), `suggested_folder`, and `extracted_text`, updating status to `DONE`.
+  5. Catches any processing/API exceptions, updating status to `FAILED` with `error_message`.
+
+---
+
+### 3 — Backend API & UI Integration
+
+#### [MODIFY] [views.py](file:///c:/Programs/Python/skyvault/vault/views.py)
+
+- Update `file_preview_data(request, file_id)` to send live `ai_analysis` fields (`status`, `summary`, `tags`, `suggested_folder`) in JSON payload.
+
+#### [MODIFY] [base.js](file:///c:/Programs/Python/skyvault/static/base.js)
+
+- Update `openPreviewModal` in `base.js` to render live AI summary, tag chips (`#invoice`, `#pdf`), and status badge in the preview modal.
+
+---
+
+### 4 — Admin & Signal Wireup
+
+#### [MODIFY] [admin.py](file:///c:/Programs/Python/skyvault/ai_features/admin.py)
+
+- Register `FileAnalysis` in Django Admin with filterable columns (`status`, `file`, `created_at`).
+
+---
+
+## Verification Plan
+
+### Automated Checks
+```bash
+docker-compose exec -T web-skyvault python manage.py check
+```
+
+### Manual Verification
+1. **Upload a PDF or TXT file**:
+   - Verify `qcluster` processes background task.
+   - Inspect `FileAnalysis` status in Django shell or Admin -> `DONE`.
+2. **Open Preview Modal**:
+   - Click preview on the uploaded file.
+   - Verify AI summary paragraph and tag chips appear.
+3. **Upload an image / binary file**:
+   - Verify file is processed cleanly with status `SKIPPED` without crashing.

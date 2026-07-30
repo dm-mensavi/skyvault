@@ -1,0 +1,120 @@
+# Implementation Plan — Phase 2: Semantic Search & RAG
+
+Implement vector embedding indexing using OpenAI 1536-dimensional embeddings, `pgvector` HNSW cosine similarity search, a paragraph chunking pipeline, semantic search integration into SkyVault's search bar, an interactive "Ask SkyVault AI" RAG Q&A modal, and a Recall@K evaluation suite.
+
+---
+
+## Proposed Changes
+
+### 1 — Data Layer (`ai_features/models.py` & Migrations)
+
+#### [MODIFY] [models.py](file:///c:/Programs/Python/skyvault/ai_features/models.py)
+
+Add `DocumentChunk` model:
+```python
+from pgvector.django import VectorField
+
+class DocumentChunk(models.Model):
+    file = models.ForeignKey("vault.File", on_delete=models.CASCADE, related_name="chunks")
+    analysis = models.ForeignKey(FileAnalysis, on_delete=models.CASCADE, related_name="chunks")
+    chunk_index = models.PositiveIntegerField()
+    content = models.TextField()
+    embedding = VectorField(dimensions=1536)
+    token_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("file", "chunk_index")
+```
+
+#### [NEW] `ai_features/migrations/0003_documentchunk.py`
+#### [NEW] `ai_features/migrations/0004_hnsw_index.py`
+
+Add `DocumentChunk` creation migration and HNSW vector index migration for fast cosine distance matching:
+```sql
+CREATE INDEX IF NOT EXISTS ai_features_docchunk_embedding_hnsw_idx 
+ON ai_features_documentchunk USING hnsw (embedding vector_cosine_ops);
+```
+
+---
+
+### 2 — Chunking & Embedding Pipeline
+
+#### [NEW] `ai_features/chunking.py`
+
+Paragraph-boundary chunking strategy:
+- Split on `\n\n` paragraphs.
+- Max chunk size ~2000 chars (~500 tokens).
+- Overlap ~200 chars (~50 tokens).
+- Minimum fragment merge threshold ~50 chars.
+
+#### [MODIFY] [tasks.py](file:///c:/Programs/Python/skyvault/ai_features/tasks.py)
+
+Extend `analyze_file(file_id)`:
+1. After Claude analysis completes, chunk `extracted_text`.
+2. Generate 1536-dim batch embeddings using `ai_features/services/embeddings.py`.
+3. Idempotently delete old chunks for `file_id` and bulk-insert new `DocumentChunk` instances.
+
+---
+
+### 3 — Retrieval & Vector Search Engine
+
+#### [NEW] `ai_features/services/search.py`
+
+- `search_chunks(user, query: str, top_k: int = 5)`:
+  - Generates query embedding.
+  - Queries `DocumentChunk` filtered by `file__user=user`, `file__trashed=False`.
+  - Orders by `pgvector.django.CosineDistance("embedding", query_vector)`.
+- `search_files(user, query: str, top_k: int = 10)`:
+  - Deduplicates top chunk matches to file-level relevance scores.
+
+---
+
+### 4 — RAG Q&A & Search UI Upgrade
+
+#### [NEW] `ai_features/views.py`
+
+Endpoint `POST /vault/ask/` (`ask_vault`):
+- Accepts user query, performs `search_chunks` for top-5 relevant document excerpts.
+- RAG Prompt Contract: Instructs Claude to answer strictly based on retrieved context and cite source document titles.
+- Returns JSON response: `{ "answer": "...", "sources": [{"id": 1, "name": "..."}] }`.
+
+#### [MODIFY] [urls.py](file:///c:/Programs/Python/skyvault/skyvault/urls.py)
+
+- Register `/vault/ask/` route.
+
+#### [MODIFY] [views.py](file:///c:/Programs/Python/skyvault/vault/views.py) & [search.html](file:///c:/Programs/Python/skyvault/templates/vault/search.html)
+
+- Upgrade `search_view` to combine filename matching with pgvector semantic search, rendering matched text snippets and tag chips.
+
+#### [MODIFY] [base.js](file:///c:/Programs/Python/skyvault/static/base.js) & [base.html](file:///c:/Programs/Python/skyvault/templates/base.html)
+
+- Connect sidebar "Ask SkyVault AI" link to open an interactive RAG chat modal overlay with instant response streaming and clickable file citation badges.
+
+---
+
+### 5 — Evaluation Suite
+
+#### [NEW] `ai_features/management/commands/run_search_eval.py` & `ai_features/eval/queries.json`
+
+- Management command `python manage.py run_search_eval` to calculate **Recall@K** metrics against test queries.
+- Write benchmark results to `docs/EVAL_RESULTS.md`.
+
+---
+
+## Verification Plan
+
+### Automated Build & Migrations
+```bash
+docker-compose exec -T web-skyvault python manage.py makemigrations
+docker-compose exec -T web-skyvault python manage.py migrate
+docker-compose exec -T web-skyvault python manage.py check
+```
+
+### End-to-End Vector Indexing & RAG Q&A Test
+1. **Upload test document**:
+   - Upload a text/PDF file -> verify `DocumentChunk` records are generated in DB with 1536-dim vector embeddings.
+2. **Semantic Search Test**:
+   - Query search bar with natural language concepts (not exact filename match) -> verify semantic search returns the file with relevance score.
+3. **RAG Q&A Modal Test**:
+   - Open "Ask SkyVault AI" modal -> ask a question about uploaded file content -> verify Claude returns answer with source file citation link.

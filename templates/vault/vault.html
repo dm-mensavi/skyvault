@@ -3,67 +3,72 @@
 {% load custom_filters %}
 
 {% block title %}My Drive - SkyVault{% endblock %}
-{% block extra_js %}<script src="{% static 'vault/vault.js' %}"></script>{% endblock %}
-{% block content %}
-<div class="drive-container">
-    <div class="drive-header" data-folder-id="{{ folder.id|default_if_none:'' }}">
 
-        <!-- Folder Creation Form -->
+{% block extra_js %}<script src="{% static 'vault/vault.js' %}?v=7"></script>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">folder</span> My Drive</h2>
+        <p class="subtitle">All your files and folders in one place.</p>
+    </div>
+    <div class="header-actions">
+        <label for="uploaded-file" class="btn btn-primary" style="cursor:pointer;">
+            <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">upload_file</span> Upload
+            <form id="upload-form" method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data" style="display:none">
+                {% csrf_token %}
+                <input type="file" name="uploaded_file" id="uploaded-file" onchange="this.closest('form').submit()">
+                <input type="hidden" name="folder_id" id="upload-folder-id" value="">
+            </form>
+        </label>
+        <button id="create-folder-btn" class="btn btn-secondary" onclick="SkyVaultDrive.openCreateFolderModal()">
+            <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">create_new_folder</span> New Folder
+        </button>
+    </div>
+</div>
+
+{% if messages %}
+<div id="message-container">
+    {% for message in messages %}
+    <div class="toast toast-{{ message.tags }} show" style="opacity:1; transform:none; position:relative; margin-bottom:8px;">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Include the file grid for displaying folders and files -->
+{% include "vault/_file_grid.html" with folders=folders files=files %}
+
+<!-- Create Folder Modal -->
+<div id="folder-modal" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-backdrop" onclick="SkyVaultDrive.closeCreateFolderModal()"></div>
+    <div class="modal-card" style="max-width: 400px;">
+        <h3>New Folder</h3>
         <form method="post" action="{% url 'create_folder' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            {% comment %} <label for="folder_name">Create New Folder:</label> {% endcomment %}
-            <input type="text" name="folder_name" id="folder_name" placeholder="Enter folder name" required>
-            <button type="submit">Create</button>
+            <input type="hidden" name="parent_folder_id" value="">
+            <div style="margin-bottom: 20px;">
+                <input type="text" name="folder_name" id="new-folder-name" placeholder="Untitled Folder"
+                    style="width:100%; padding:10px 14px; border:1px solid var(--border-color); border-radius:12px; font-size:15px; background:var(--bg-primary); color:var(--text-primary); outline:none; font-family:var(--font-main);"
+                    required autofocus>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="SkyVaultDrive.closeCreateFolderModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </div>
         </form>
+    </div>
+</div>
 
-        <!-- File Upload Form -->
-        <form method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% comment %} <label for="uploaded-file">Upload File:</label> {% endcomment %}
-            <input type="file" name="uploaded_file" id="uploaded-file" required>
-            
-            <!-- Folder Selection Dropdown (Optional) -->
-            <label for="folder">Path</label>
-            <select name="folder_id" id="folder">
-                <option value="">Root</option>
-                {% for folder in folders %}
-                    <option value="{{ folder.id }}">{{ folder.name }}</option>
-                {% endfor %}
-            </select>
-            
-            <button type="submit">Upload</button>
-        </form>
-        
-    </div>
-    
-    {% if messages %}
-    <div class="message-container" >
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    {% comment %} <div id="alert-container" style="display:none;"></div> {% endcomment %}
-    <!-- Include the file grid for displaying folders and files -->
-    {% include "vault/_file_grid.html" with folders=folders files=files %}
-
-    <!-- Context menu -->
-    <div class="context-menu">
-        <!-- Options specific to files/folders -->
-        <div class="context-menu-item file-folder-only" data-action="open">Open</div>
-        <div class="context-menu-item file-folder-only" data-action="cut">Cut</div>
-        <div class="context-menu-item file-folder-only" data-action="copy">Copy</div>
-        <div class="context-menu-item file-folder-only" data-action="delete">Delete</div>
-        <div class="context-menu-item file-folder-only" data-action="share">Share</div>
-        <div class="context-menu-item file-folder-only" data-action="star">Star</div>
-        
-        <!-- Options available for empty space -->
-        <div class="context-menu-item" data-action="paste">Paste</div>
-        <div class="context-menu-item" data-action="about">About</div>
-    </div>
-    
+<!-- Item Context Menu -->
+<div id="item-context-menu" class="context-menu">
+    <div class="menu-item" id="ctx-open"><span class="material-icons">open_in_new</span> Open</div>
+    <div class="menu-item" id="ctx-preview"><span class="material-icons">visibility</span> Preview</div>
+    <div class="menu-item" id="ctx-cut"><span class="material-icons">content_cut</span> Cut</div>
+    <div class="menu-item" id="ctx-copy"><span class="material-icons">content_copy</span> Copy</div>
+    <div class="menu-item" id="ctx-paste"><span class="material-icons">content_paste</span> Paste</div>
+    <div class="menu-item" id="ctx-star"><span class="material-icons">star</span> Star / Unstar</div>
+    <div class="menu-item" id="ctx-share"><span class="material-icons">share</span> Share</div>
+    <hr style="border:none; border-top:1px solid var(--border-color); margin:4px 0;">
+    <div class="menu-item danger" id="ctx-delete"><span class="material-icons">delete</span> Move to Trash</div>
 </div>
 {% endblock %}
-
-

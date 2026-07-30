@@ -1,18 +1,35 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Shared Files - Vault{% endblock %}
+{% block title %}Shared with Me - SkyVault{% endblock %}
 
 {% block content %}
-<div class="vault-container">
-    <h2>Shared Files</h2>
-    <div class="file-grid">
-        {% for file in shared_files %}
-        <div class="file-card">
-            <span class="material-icons">folder_shared</span>
-            <p>{{ file.name }}</p>
-        </div>
-        {% endfor %}
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">people</span> Shared with Me</h2>
+        <p class="subtitle">Files shared by other users.</p>
     </div>
 </div>
+
+{% if shared_files %}
+<div class="drive-grid">
+    {% for file in shared_files %}
+    <div class="drive-card" data-id="{{ file.id }}" data-type="file" onclick="SkyVault.openPreviewModal({{ file.id }})">
+        <div class="card-icon file-icon">
+            <span class="material-icons">folder_shared</span>
+        </div>
+        <div class="card-info">
+            <span class="card-title">{{ file.name }}</span>
+            <span class="card-sub">Shared</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="material-icons empty-icon">people_outline</span>
+    <p>Nothing shared with you yet</p>
+    <p style="font-size:13px; color:var(--text-muted);">Files shared with you will appear here.</p>
+</div>
+{% endif %}
 {% endblock %}

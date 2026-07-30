@@ -1,19 +1,46 @@
 {% extends 'base.html' %}
 
-{% block content %}
-    <h2>File Drive Statistics</h2>
+{% block title %}Dashboard - SkyVault{% endblock %}
 
-    <div style="display: flex; gap: 20px;">
-        <div style="width: 50%;">
-            <h3>File Type Distribution</h3>
-            <canvas id="fileTypeChart"></canvas>
-        </div>
-        <div style="width: 50%;">
-            <h3>Storage Usage Over Time (GB)</h3>
-            <canvas id="storageUsageChart"></canvas>
+{% block content %}
+    <div class="page-header">
+        <div class="header-title">
+            <h2><span class="material-icons title-icon">dashboard</span> Storage Analytics &amp; AI Insights</h2>
+            <p class="subtitle">Overview of your file drive statistics and automated storage optimization.</p>
         </div>
     </div>
 
+    <!-- Phase 3: Live AI Storage Insight Banner -->
+    <div class="ai-insight-banner" id="ai-insight-banner" style="background: linear-gradient(135deg, var(--bg-tertiary, #f8f9fa) 0%, rgba(26,115,232,0.05) 100%); border: 1px solid var(--border-color, #dadce0); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: flex-start; gap: 16px;">
+            <span class="material-icons spinner" id="ai-insight-icon" style="color: var(--primary-color, #1a73e8); font-size: 28px; margin-top: 2px;">sync</span>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <h4 style="font-size: 15px; font-weight: 600; color: var(--primary-color, #1a73e8); margin: 0;">Smart AI Storage Insight</h4>
+                    <button id="ai-insight-refresh-btn" onclick="loadAiInsight(true)" title="Refresh insight" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; color: var(--text-secondary);">
+                        <span class="material-icons" style="font-size: 18px;">refresh</span>
+                    </button>
+                </div>
+                <p id="ai-insight-text" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                    Loading AI insight&hellip;
+                </p>
+                <p id="ai-insight-meta" style="font-size: 11px; color: var(--text-muted); margin: 6px 0 0 0;"></p>
+            </div>
+        </div>
+        <!-- Storage stats pills -->
+        <div id="ai-stats-pills" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color, #dadce0); display: flex; gap: 8px; flex-wrap: wrap;"></div>
+    </div>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 300px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">File Type Distribution</h3>
+            <canvas id="fileTypeChart"></canvas>
+        </div>
+        <div style="flex: 1; min-width: 300px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Storage Usage Over Time (MB)</h3>
+            <canvas id="storageUsageChart"></canvas>
+        </div>
+    </div>
 {% endblock %}
 {% block extra_js %}
 <!-- Include Chart.js and Date Adapter -->
@@ -40,7 +67,7 @@
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: true, // Enable legend display
+                        display: true,
                         position: 'top'
                     },
                     tooltip: {
@@ -56,8 +83,8 @@
     // Function to render the Storage Usage Over Time Line Chart
     function renderStorageUsageChart(data) {
         const labels = data.usage_data.map(item => item.day);
-        const usage = data.usage_data.map(item => (item.cumulative_size / (1024 * 1024)).toFixed(2)); // Convert to MB
-        const quota = new Array(labels.length).fill(data.storage_quota / (1024 * 1024)); // Convert 100 MB quota to MB
+        const usage = data.usage_data.map(item => (item.cumulative_size / (1024 * 1024)).toFixed(2));
+        const quota = new Array(labels.length).fill(data.storage_quota / (1024 * 1024));
 
         new Chart(document.getElementById("storageUsageChart"), {
             type: "line",
@@ -76,7 +103,7 @@
                         data: quota,
                         borderColor: "rgba(255, 99, 132, 1)",
                         backgroundColor: "rgba(255, 99, 132, 0.2)",
-                        borderDash: [5, 5], // Dashed line for quota
+                        borderDash: [5, 5],
                         fill: false
                     }
                 ]
@@ -92,13 +119,13 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100 // Set max to 100 MB for clear representation
+                        max: 100
                     },
                     x: {
-                        type: 'time', // Use 'time' scale
+                        type: 'time',
                         time: {
-                            unit: 'hour', // Display dates by day
-                            tooltipFormat: 'MMM dd' // Tooltip date format
+                            unit: 'hour',
+                            tooltipFormat: 'MMM dd'
                         }
                     }
                 }
@@ -106,22 +133,72 @@
         });
     }
 
+    // Phase 3: Load and render AI Storage Insight
+    function loadAiInsight(forceRefresh) {
+        const icon = document.getElementById("ai-insight-icon");
+        const text = document.getElementById("ai-insight-text");
+        const meta = document.getElementById("ai-insight-meta");
+        const pills = document.getElementById("ai-stats-pills");
+
+        icon.textContent = "sync";
+        icon.classList.add("spinner");
+        text.textContent = forceRefresh ? "Regenerating AI insight…" : "Loading AI insight…";
+        meta.textContent = "";
+        pills.style.display = "none";
+        pills.innerHTML = "";
+
+        const url = "{% url 'dashboard_ai_insight' %}" + (forceRefresh ? "?refresh=1" : "");
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                icon.textContent = "auto_awesome";
+                icon.classList.remove("spinner");
+                icon.style.color = "var(--primary-color, #1a73e8)";
+
+                text.textContent = data.insight || "No insight available.";
+                meta.textContent = `Generated at: ${data.generated_at}${data.from_cache ? " (cached)" : " (fresh)"}`;
+
+                // Render stats pills from snapshot
+                const stats = data.stats || {};
+                const pillData = [];
+                if (stats.total_files != null) pillData.push({ icon: "folder", label: `${stats.total_files} files (${stats.total_mb} MB)` });
+                if (stats.trashed_count) pillData.push({ icon: "delete", label: `${stats.trashed_count} in trash` });
+                if (stats.untouched_6mo) pillData.push({ icon: "schedule", label: `${stats.untouched_6mo} untouched 6+ mo.` });
+                const topType = stats.by_type && Object.entries(stats.by_type)[0];
+                if (topType) pillData.push({ icon: "description", label: `Top type: .${topType[0]} (${topType[1]})` });
+
+                if (pillData.length) {
+                    pills.style.display = "flex";
+                    pills.innerHTML = pillData.map(p =>
+                        `<span style="display:flex;align-items:center;gap:4px;background:var(--bg-surface,#fff);border:1px solid var(--border-color,#dadce0);border-radius:12px;padding:3px 10px;font-size:12px;color:var(--text-secondary);">
+                            <span class="material-icons" style="font-size:14px;">${p.icon}</span>${p.label}
+                        </span>`
+                    ).join("");
+                }
+            })
+            .catch(err => {
+                console.error("AI Insight fetch error:", err);
+                icon.textContent = "error_outline";
+                icon.classList.remove("spinner");
+                icon.style.color = "#c5221f";
+                text.textContent = "Could not load AI insight. Please try refreshing.";
+            });
+    }
+
     // Fetch and Render File Type Distribution Chart
     fetch("{% url 'file_type_distribution' %}")
         .then(response => response.json())
-        .then(data => {
-            console.log("File Type Distribution Data:", data); // Log data to console
-            renderFileTypeChart(data);
-        })
+        .then(data => renderFileTypeChart(data))
         .catch(error => console.error("Error fetching file type distribution data:", error));
 
     // Fetch and Render Storage Usage Over Time Chart
     fetch("{% url 'storage_usage_over_time' %}")
         .then(response => response.json())
-        .then(data => {
-            console.log("Storage Usage Data:", data); // Log data to console
-            renderStorageUsageChart(data);
-        })
+        .then(data => renderStorageUsageChart(data))
         .catch(error => console.error("Error fetching storage usage data:", error));
+
+    // Load AI Insight on page load
+    loadAiInsight(false);
 </script>
 {% endblock %}

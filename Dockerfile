@@ -14,12 +14,11 @@ RUN apt-get update && apt-get install -y postgresql-client
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
-# Copy the entrypoint script and grant execution permissions
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
 # Copy the application code
 COPY . /app/
+
+# Normalize Windows line endings and grant execution permissions
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Run the entrypoint script by default
 ENTRYPOINT ["/app/entrypoint.sh"]

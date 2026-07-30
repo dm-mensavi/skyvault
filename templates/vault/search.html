@@ -1,18 +1,80 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Search Results{% endblock %}
+{% block title %}Search Results - SkyVault{% endblock %}
 
 {% block content %}
-<div class="vault-container">
-    <h2>Search Results for "{{ query }}"</h2>
-    <div class="file-grid">
-        {% for file in results %}
-        <div class="file-card">
-            <span class="material-icons">insert_drive_file</span>
-            <p>{{ file.name }}</p>
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">search</span> Search Results</h2>
+        <p class="subtitle">
+            {% if query %}
+                Results for "<strong>{{ query }}</strong>"
+            {% else %}
+                Enter a search term in the search bar above.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+{% if semantic_results %}
+<div class="search-section" style="margin-bottom: 32px;">
+    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons" style="color: var(--primary-color, #1a73e8);">auto_awesome</span>
+        AI Semantic Vector Matches
+        <span class="ai-badge" style="background: var(--primary-light, #e8f0fe); color: var(--primary-color, #1a73e8); font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 500;">pgvector</span>
+    </h3>
+    <div class="semantic-results-list" style="display: flex; flex-direction: column; gap: 12px;">
+        {% for match in semantic_results %}
+        <div class="semantic-card" onclick="SkyVault.openPreviewModal({{ match.file.id }})" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #dadce0); border-radius: 8px; padding: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons" style="color: var(--primary-color, #1a73e8);">description</span>
+                    <strong style="font-size: 15px; color: var(--text-primary);">{{ match.file.name }}</strong>
+                </div>
+                <span class="score-badge" style="font-size: 12px; font-weight: 600; color: #137333; background: #e6f4ea; padding: 2px 8px; border-radius: 12px;">
+                    {{ match.score|floatformat:2|stringformat:"s" }} match score
+                </span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 10px 0; font-family: monospace; white-space: pre-wrap; background: var(--bg-primary, #f8f9fa); padding: 8px 12px; border-radius: 6px;">{{ match.snippet }}</p>
+            {% if match.tags %}
+            <div class="tag-chips" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                {% for tag in match.tags %}
+                <span class="chip" style="font-size: 11px; background: var(--bg-hover, #f1f3f4); padding: 2px 8px; border-radius: 12px; color: var(--text-secondary);">#{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
 </div>
+{% endif %}
+
+{% if results %}
+<div class="search-section">
+    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons">folder_open</span>
+        Filename Matches
+    </h3>
+    <div class="drive-grid">
+        {% for file in results %}
+        <div class="drive-card" data-id="{{ file.id }}" data-type="file" onclick="SkyVault.openPreviewModal({{ file.id }})">
+            <div class="card-icon file-icon">
+                <span class="material-icons">insert_drive_file</span>
+            </div>
+            <div class="card-info">
+                <span class="card-title">{{ file.name }}</span>
+                <span class="card-sub">{{ file.size|filesizeformat }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% elif not semantic_results and query %}
+<div class="empty-state">
+    <span class="material-icons empty-icon">search_off</span>
+    <p>No results found for "{{ query }}"</p>
+    <p style="font-size:13px; color:var(--text-muted);">Try different keywords or concept descriptions.</p>
+</div>
+{% endif %}
 {% endblock %}

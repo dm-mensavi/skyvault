@@ -1,139 +1,82 @@
 <!-- templates/vault/trash.html -->
-
 {% extends 'base.html' %}
 
+{% block title %}Trash - SkyVault{% endblock %}
+
 {% block content %}
-  <h2>Trash</h2>
-
-  <!-- Folder Section -->
-  <h3>Folders</h3>
-  <div class="drive-container">
-      {% if trashed_folders %}
-          {% for folder in trashed_folders %}
-              <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
-                  <p class="file-item-name">{{ folder.name }}</p>
-                  <div class="actions">
-                      <button class="restore-btn" onclick="handleRestore('{{ folder.id }}', 'folder')">Restore</button>
-                      <button class="delete-btn" onclick="handlePermanentDelete('{{ folder.id }}', 'folder')">Delete</button>
-                  </div>
-              </div>
-          {% endfor %}
-      {% else %}
-          <p class="trash-empty-message">No folders in trash.</p>
-      {% endif %}
-  </div>
-
-  <!-- File Section -->
-  <h3>Files</h3>
-  <div class="drive-container">
-      {% if trashed_files %}
-          {% for file in trashed_files %}
-              <div class="file-item" data-id="{{ file.id }}" data-type="file">
-                  <p class="file-item-name">{{ file.name }}</p>
-                  <div class="actions">
-                      <button class="restore-btn" onclick="handleRestore('{{ file.id }}', 'file')">Restore</button>
-                      <button class="delete-btn" onclick="handlePermanentDelete('{{ file.id }}', 'file')">Delete</button>
-                  </div>
-              </div>
-          {% endfor %}
-      {% else %}
-          <p class="trash-empty-message">No files in trash.</p>
-      {% endif %}
-  </div>
-  <!-- Custom Confirmation Modal -->
-<div id="confirmationModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal()">&times;</span>
-        <p id="confirmationMessage"></p>
-        <div class="modal-actions">
-            <button id="confirmButton" class="modal-button delete-button">OK</button>
-            <button onclick="closeModal()" class="modal-button">Cancel</button>
-        </div>
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">delete</span> Trash</h2>
+        <p class="subtitle">Items in trash will remain until permanently deleted.</p>
     </div>
 </div>
 
+<div class="trash-section">
+    <div class="section-title">
+        <h3>Folders</h3>
+    </div>
+    {% if trashed_folders %}
+    <div class="drive-grid">
+        {% for folder in trashed_folders %}
+        <div class="drive-card trash-card" data-id="{{ folder.id }}" data-type="folder" data-name="{{ folder.name }}" oncontextmenu="SkyVault.showTrashContextMenu(event, '{{ folder.id }}', 'folder', '{{ folder.name|escapejs }}')">
+            <div class="card-icon folder-icon">
+                <span class="material-icons">folder</span>
+            </div>
+            <div class="card-info">
+                <span class="card-title">{{ folder.name }}</span>
+                <span class="card-sub">Folder</span>
+            </div>
+            <div class="card-actions">
+                <button class="icon-btn action-btn" onclick="SkyVault.handleRestore('{{ folder.id }}', 'folder', '{{ folder.name|escapejs }}')" title="Restore">
+                    <span class="material-icons">restore</span>
+                </button>
+                <button class="icon-btn action-btn danger" onclick="SkyVault.handlePermanentDelete('{{ folder.id }}', 'folder', '{{ folder.name|escapejs }}')" title="Delete Permanently">
+                    <span class="material-icons">delete_forever</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="material-icons empty-icon">folder_off</span>
+        <p>No folders in trash</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="trash-section mt-4">
+    <div class="section-title">
+        <h3>Files</h3>
+    </div>
+    {% if trashed_files %}
+    <div class="drive-grid">
+        {% for file in trashed_files %}
+        <div class="drive-card trash-card" data-id="{{ file.id }}" data-type="file" data-name="{{ file.name }}" oncontextmenu="SkyVault.showTrashContextMenu(event, '{{ file.id }}', 'file', '{{ file.name|escapejs }}')">
+            <div class="card-icon file-icon">
+                <span class="material-icons">insert_drive_file</span>
+            </div>
+            <div class="card-info">
+                <span class="card-title">{{ file.name }}</span>
+                <span class="card-sub">{{ file.size|filesizeformat }}</span>
+            </div>
+            <div class="card-actions">
+                <button class="icon-btn action-btn" onclick="SkyVault.handleRestore('{{ file.id }}', 'file', '{{ file.name|escapejs }}')" title="Restore">
+                    <span class="material-icons">restore</span>
+                </button>
+                <button class="icon-btn action-btn danger" onclick="SkyVault.handlePermanentDelete('{{ file.id }}', 'file', '{{ file.name|escapejs }}')" title="Delete Permanently">
+                    <span class="material-icons">delete_forever</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="material-icons empty-icon">description</span>
+        <p>No files in trash</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-   // CSRF token
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-let actionType, itemId, itemType;  // Variables to store action context
-
-// Function to open the custom modal
-function openModal(message, onConfirm) {
-    document.getElementById('confirmationMessage').textContent = message;
-    document.getElementById('confirmButton').onclick = onConfirm;
-    document.getElementById('confirmationModal').style.display = 'block';
-}
-
-// Function to close the custom modal
-function closeModal() {
-    document.getElementById('confirmationModal').style.display = 'none';
-}
-
-// Handle Restore Action
-function handleRestore(id, type) {
-    actionType = 'restore';
-    itemId = id;
-    itemType = type;
-    openModal(`Are you sure you want to restore this ${type}?`, confirmAction);
-}
-
-// Handle Permanent Delete Action
-function handlePermanentDelete(id, type) {
-    actionType = 'delete';
-    itemId = id;
-    itemType = type;
-    openModal(`Are you sure you want to permanently delete this ${type}?`, confirmAction);
-}
-
-// Execute the confirmed action
-function confirmAction() {
-    closeModal();
-    if (actionType === 'restore') {
-        fetch(`/vault/restore/${itemType}/${itemId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} restored successfully.`);
-                location.reload();
-            } else {
-                alert(`Error restoring ${itemType}.`);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while restoring.');
-        });
-    } else if (actionType === 'delete') {
-        fetch(`/vault/delete-permanent/${itemType}/${itemId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} permanently deleted.`);
-                location.reload();
-            } else {
-                alert(`Error deleting ${itemType}.`);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while deleting.');
-        });
-    }
-}
-</script>
-{% endblock %}

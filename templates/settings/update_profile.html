@@ -1,23 +1,95 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Update Profile{% endblock %}
+{% block title %}Edit Profile · SkyVault{% endblock %}
 
 {% block content %}
-<div id="update-profile-container">
-    <h2>Update Profile</h2>
-    <form method="post" enctype="multipart/form-data" class="update-profile-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="profile-submit-button">Save Changes</button>
-    </form>
+<div class="page-header">
+    <div class="header-title">
+        <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="{% url 'profile_view' %}" class="breadcrumb-link">
+                <span class="material-icons">account_circle</span> Profile
+            </a>
+            <span class="material-icons breadcrumb-sep">chevron_right</span>
+            <span class="breadcrumb-current">Edit</span>
+        </nav>
+        <h2><span class="material-icons title-icon">edit</span> Edit Profile</h2>
+        <p class="subtitle">Update your personal information and avatar.</p>
+    </div>
 </div>
 
 {% if messages %}
-<div class="profile-message-container">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
-    {% endfor %}
-</div>
+{% for message in messages %}
+<div class="toast toast-{{ message.tags }} show" style="opacity:1;transform:none;position:relative;margin-bottom:12px;max-width:560px;">{{ message }}</div>
+{% endfor %}
 {% endif %}
+
+<div class="edit-profile-wrapper">
+    <form method="post" enctype="multipart/form-data" class="edit-profile-form">
+        {% csrf_token %}
+
+        <div class="form-avatar-preview" id="avatar-preview-area">
+            {% if user.userprofile.profile_picture %}
+                <img src="{{ user.userprofile.profile_picture.url }}" id="avatar-img-preview" alt="Avatar preview" class="profile-avatar-img" style="width:110px;height:110px;max-width:110px;object-fit:cover;border-radius:50%;">
+            {% else %}
+                <img src="{% static 'images/default_profile.jpg' %}" id="avatar-img-preview" alt="Avatar preview" class="profile-avatar-img" style="width:110px;height:110px;max-width:110px;object-fit:cover;border-radius:50%;">
+            {% endif %}
+            <div class="avatar-overlay" onclick="document.getElementById('id_profile_picture').click()">
+                <span class="material-icons">photo_camera</span>
+            </div>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:6px;margin-bottom:20px;">Click avatar to change photo</p>
+
+        <div class="form-fields">
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="form-label">
+                    {% if field.name == "bio" %}<span class="material-icons form-field-icon">notes</span>{% endif %}
+                    {% if field.name == "profile_picture" %}<span class="material-icons form-field-icon">image</span>{% endif %}
+                    {{ field.label }}
+                </label>
+                {% if field.name == "profile_picture" %}
+                    <div class="file-input-wrapper">
+                        {{ field }}
+                    </div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+                {% if field.help_text %}
+                    <p class="form-help">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="form-error"><span class="material-icons" style="font-size:14px;">error</span> {{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-submit-row">
+            <a href="{% url 'profile_view' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:4px;">save</span> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live avatar preview on file select
+const picInput = document.getElementById('id_profile_picture');
+if (picInput) {
+    picInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('avatar-img-preview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+</script>
 {% endblock %}

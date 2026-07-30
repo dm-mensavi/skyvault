@@ -1,0 +1,14 @@
+[
+  {"query": "invoice billing payment", "expected_keywords": ["invoice", "payment", "bill"], "k": 5},
+  {"query": "resume curriculum vitae work history", "expected_keywords": ["resume", "cv", "experience"], "k": 5},
+  {"query": "calendar schedule academic year", "expected_keywords": ["calendar", "academic", "schedule"], "k": 5},
+  {"query": "code interactive final engineering", "expected_keywords": ["code", "review", "engineering"], "k": 5},
+  {"query": "cover letter job application", "expected_keywords": ["cover", "letter", "application"], "k": 5},
+  {"query": "tax return 2024 deductions", "expected_keywords": ["tax", "return", "deductions"], "k": 5},
+  {"query": "project milestones quarterly timeline", "expected_keywords": ["milestones", "project", "timeline"], "k": 5},
+  {"query": "budget forecast 2025 finance", "expected_keywords": ["budget", "forecast", "finance"], "k": 5},
+  {"query": "contract client skyvault", "expected_keywords": ["contract", "client", "SkyVault"], "k": 5},
+  {"query": "travel receipts expenses 2024", "expected_keywords": ["travel", "receipts", "expenses"], "k": 5},
+  {"query": "meeting notes planning faculty", "expected_keywords": ["meeting", "notes", "planning"], "k": 5},
+  {"query": "project guidelines contributing fork", "expected_keywords": ["guidelines", "project", "contributing"], "k": 5}
+]

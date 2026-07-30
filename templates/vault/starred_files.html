@@ -1,20 +1,58 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<h2>Starred Items</h2>
-<div class="file-grid">
-    {% for folder in starred_folders %}
-    <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
-        <span class="material-icons">folder</span>
-        <p>{{ folder.name }}</p>
-    </div>
-    {% endfor %}
+{% block title %}Starred - SkyVault{% endblock %}
 
-    {% for file in starred_files %}
-    <div class="file-item" data-id="{{ file.id }}" data-type="file">
-        <span class="material-icons">insert_drive_file</span>
-        <p>{{ file.name }}</p>
+{% block content %}
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">star</span> Starred</h2>
+        <p class="subtitle">Files and folders you've starred for quick access.</p>
+    </div>
+</div>
+
+{% if starred_folders or starred_files %}
+
+{% if starred_folders %}
+<div class="section-title" style="margin-bottom:12px;"><h3>Folders</h3></div>
+<div class="drive-grid" style="margin-bottom:24px;">
+    {% for folder in starred_folders %}
+    <div class="drive-card" data-id="{{ folder.id }}" data-type="folder" onclick="location.href='{% url 'view_folder' folder.id %}'">
+        <div class="card-icon folder-icon">
+            <span class="material-icons">folder</span>
+        </div>
+        <div class="card-info">
+            <span class="card-title">{{ folder.name }}</span>
+            <span class="card-sub">Folder</span>
+        </div>
+        <span class="material-icons" style="color: #F9AB00; font-size:18px; margin-left:auto;">star</span>
     </div>
     {% endfor %}
 </div>
+{% endif %}
+
+{% if starred_files %}
+<div class="section-title" style="margin-bottom:12px;"><h3>Files</h3></div>
+<div class="drive-grid">
+    {% for file in starred_files %}
+    <div class="drive-card" data-id="{{ file.id }}" data-type="file" onclick="SkyVault.openPreviewModal({{ file.id }})">
+        <div class="card-icon file-icon">
+            <span class="material-icons">insert_drive_file</span>
+        </div>
+        <div class="card-info">
+            <span class="card-title">{{ file.name }}</span>
+            <span class="card-sub">{{ file.size|filesizeformat }}</span>
+        </div>
+        <span class="material-icons" style="color: #F9AB00; font-size:18px; margin-left:auto;">star</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <span class="material-icons empty-icon">star_border</span>
+    <p>No starred items yet</p>
+    <p style="font-size:13px; color:var(--text-muted);">Star files and folders you want to quickly access later.</p>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,33 +1,30 @@
 <!-- _file_grid.html -->
 {% load custom_filters %}
-<div class="file-grid">
+<div class="drive-grid">
   <!-- Display Folders -->
   {% for folder in folders %}
-  <div class="file-item" data-id="{{ folder.id }}" data-type="folder">
-      <a href="{% url 'view_folder' folder.id %}">
+  <div class="drive-card" data-id="{{ folder.id }}" data-type="folder" onclick="location.href='{% url 'view_folder' folder.id %}'">
+      <div class="card-icon folder-icon">
           <span class="material-icons">folder</span>
-          <p>{{ folder.name }}</p>
-      </a>
+      </div>
+      <div class="card-info">
+          <span class="card-title">{{ folder.name }}</span>
+          <span class="card-sub">Folder</span>
+      </div>
   </div>
   {% endfor %}
 
   <!-- Display Files -->
   {% for file in files %}
-  <div class="file-item" data-id="{{ file.id }}" data-type="file">
-      <a href="{% url 'open_file' file.id %}">
-          {% if file.uploaded_file.name|endswith:".jpg" or file.uploaded_file.name|endswith:".png" %}
-              <img src="{{ file.uploaded_file.url }}" alt="{{ file.name }}" class="file-icon">
-          {% else %}
-          <span class="material-icons">
-            {% if file.starred %}
-                star
-            {% else %}
-                insert_drive_file
-            {% endif %}
-        </span>        
-          {% endif %}
-          <p>{{ file.name }}</p>
-      </a>
+  <div class="drive-card" data-id="{{ file.id }}" data-type="file" onclick="SkyVault.openPreviewModal({{ file.id }})">
+      <div class="card-icon file-icon">
+          <span class="material-icons">{% if file.starred %}star{% else %}insert_drive_file{% endif %}</span>
+      </div>
+      <div class="card-info">
+          <span class="card-title">{{ file.name }}</span>
+          <span class="card-sub">{{ file.size|filesizeformat }}</span>
+      </div>
   </div>
   {% endfor %}
 </div>
+

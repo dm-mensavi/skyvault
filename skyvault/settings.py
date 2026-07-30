@@ -40,13 +40,28 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third-party apps
+    "django_q",
     # custom apps
     "accounts",
     "settings",
     "vault",
     "dashboard",
     "notifications",
+    "ai_features",
 ]
+
+# Django Q Cluster Configuration
+Q_CLUSTER = {
+    "name": "skyvault",
+    "workers": 2,
+    "timeout": 90,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",  # Use Django ORM as task broker
+}
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -71,7 +86,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # "vault.context_processors.storage_info", # Uncomment if you have a custom context processor
+                "vault.context_processors.storage_info",
+                "settings.context_processors.user_profile",
             ],
         },
     },
@@ -82,23 +98,25 @@ WSGI_APPLICATION = "skyvault.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Local SQLite database for development, PostgreSQL for Docker/production
-if os.environ.get("DJANGO_ENV") == "docker":
+# PostgreSQL is required (pgvector for AI features). Set DB_ENGINE=sqlite only for legacy/dev fallback.
+DB_ENGINE = os.environ.get("DB_ENGINE", "postgresql").lower()
+
+if DB_ENGINE == "sqlite":
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DB_NAME", "postgres"),
-            "USER": os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", "postgres"),
-            "HOST": os.environ.get("DB_HOST", "db-skyvault"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 else:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "skyvault"),
+            "USER": os.environ.get("DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", "postgres"),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
         }
     }
 
@@ -144,3 +162,11 @@ MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# AI Features Configuration (Phase 0+)
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL", "claude-sonnet-4-20250514")
+AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "text-embedding-3-small")
+AI_EMBEDDING_DIMENSIONS = 1536
+

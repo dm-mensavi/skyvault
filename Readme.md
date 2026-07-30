@@ -19,65 +19,74 @@ SkyVault is a file management and storage application that brings cloud-like fun
 
 ## 🛠️ **Getting Started**
 
-SkyVault can be run in two ways: using Docker or directly on your local environment.
+SkyVault requires **PostgreSQL** (with the `pgvector` extension for upcoming AI features). You can run Postgres via Docker or install it locally.
 
-### Option 1: Run with Docker
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the full AI implementation plan.
+
+### Option 1: Run with Docker (recommended)
 
 1. Ensure Docker is installed on your machine.
 2. Build and run the Docker containers:
    ```bash
    docker-compose up --build
    ```
-3. Access the application at [http://localhost:8000](http://localhost:8000) or  [http://127.0.0.1:8000](http://127.0.0.1:8000).
+   This starts the app and a PostgreSQL 16 instance with `pgvector` pre-enabled via `scripts/init_pgvector.sql`.
+3. Create an admin user (in a second terminal):
+   ```bash
+   docker-compose exec web-skyvault python manage.py createsuperuser
+   ```
+4. Access the application at [http://localhost:8000](http://localhost:8000) or [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+> **Note:** The pgvector init script runs only on a **fresh** database volume. If you previously ran SkyVault with plain Postgres, reset the volume first:
+> ```bash
+> docker-compose down -v
+> docker-compose up --build
+> ```
 
 ---
 
 ### Option 2: Run Locally (Development Mode)
 
-1. **Install Python and pip:**
-   Ensure Python and pip are installed on your machine. [Download Python here](https://www.python.org/downloads/), if needed.
+1. **Install PostgreSQL 16+** with the [pgvector extension](https://github.com/pgvector/pgvector) enabled:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS vector;
+   ```
+   Create a database (e.g. `skyvault` or `postgres`).
 
-2. **Create and Activate a Virtual Environment:**
+2. **Install Python and pip** ([Download Python](https://www.python.org/downloads/) if needed).
+
+3. **Create and activate a virtual environment:**
    ```bash
    python -m venv .venv
    ```
+   - **Windows:** `.venv\Scripts\activate`
+   - **MacOS/Linux:** `source .venv/bin/activate`
 
-   - **Activate the virtual environment:**
-     - **Windows:** 
-       ```bash
-       .venv\Scripts\activate
-       ```
-     - **MacOS/Linux:**
-       ```bash
-       source .venv/bin/activate
-       ```
-
-3. **Install Dependencies:**
-   With the virtual environment activated, install the required dependencies:
+4. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Set Up Database:**
-   If running locally, use the SQLite database by uncommenting the relevant section in `settings.py`.
+5. **Configure environment variables** — copy settings into a `.env` file (see [Environment Variables](#-environment-variables) below). For local dev, use `DB_HOST=localhost`.
 
-5. **Run Migrations:**
+6. **Run migrations:**
    ```bash
    python manage.py migrate
    ```
 
-6. **Create a Superuser (optional for admin access):**
+7. **Create a superuser (optional):**
    ```bash
    python manage.py createsuperuser
    ```
 
-7. **Start the Development Server:**
+8. **Start the development server:**
    ```bash
    python manage.py runserver
    ```
 
-8. **Access the Application:**
-   Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000) to access the application.
+9. Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+> **Legacy SQLite fallback:** Set `DB_ENGINE=sqlite` in `.env` to use SQLite. This disables pgvector and AI features.
 
 ---
 
@@ -112,19 +121,79 @@ Take a look at some screenshots of SkyVault in action:
 
 ---
 
+## AI Features 🧠
+
+SkyVault integrates AI for smart file management. Upload a document and receive auto-generated tags, summaries, and folder suggestions. Ask natural-language questions about your files with RAG-powered search.
+
+### Features
+
+- **Auto-tagging & Summarization** — AI analyzes uploaded PDFs, text, and markdown files to extract summaries, tags, and suggested folders.
+- **Semantic Search** — Find files by meaning, not just filename. Queries are embedded and matched against document chunks via pgvector cosine similarity.
+- **Ask Your Vault (RAG Q&A)** — Submit natural-language questions and receive grounded answers with source file citations.
+- **Storage Insights** — AI-generated natural-language summary of your vault contents, available on the dashboard.
+
+### How It Works
+
+1. Upload a supported file (`.pdf`, `.txt`, `.md`)
+2. A background task extracts text and sends it to Claude for analysis
+3. Text is chunked into paragraphs, embedded via OpenAI, and stored in pgvector
+4. Semantic search and RAG queries retrieve relevant chunks and generate answers using Claude
+
+### Required API Keys
+
+Set these in your `.env` file:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+```
+
+Optional overrides:
+
+```env
+AI_CLAUDE_MODEL=claude-sonnet-4-20250514
+AI_EMBEDDING_MODEL=text-embedding-3-small
+AI_EMBEDDING_DIMENSIONS=1536
+```
+
+### Running the Evaluation
+
+The retrieval system includes a Recall@K benchmark. To run it:
+
+```bash
+# Ensure you have a user with files in the database, then:
+python manage.py run_search_eval
+```
+
+Results are written to `docs/EVAL_RESULTS.md`.
+
+### Screenshots
+
+> *Tag chips and summary shown on the file detail page.*
+
+> *Semantic search returns results ranked by relevance, not just filename match.*
+
+> *Ask your vault returns a grounded answer with cited source files.*
+
+---
+
 ## 📜 **Environment Variables**
 
-To configure the project, create a `.env` file with the following environment variables:
+Create a `.env` file in the project root:
 
 ```env
 SECRET_KEY=your_secret_key
 DEBUG=True
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-DB_HOST=your_database_host
-DB_PORT=your_database_port
 ALLOWED_HOSTS=localhost,127.0.0.1
+
+# PostgreSQL (required)
+DB_NAME=skyvault
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+
+# Optional: DB_ENGINE=sqlite for legacy SQLite fallback (no AI features)
 ```
 
 ---

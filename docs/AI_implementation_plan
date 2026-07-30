@@ -1,0 +1,90 @@
+# Implementation Plan — Phase 0: AI Infrastructure Setup
+
+Set up the core AI foundation for SkyVault: Anthropic Claude client for structured JSON generation, OpenAI embeddings client for 1536-dim vector embeddings, `pgvector` Django integration, `pdfplumber` for PDF text extraction, and a diagnostic smoke-test command.
+
+---
+
+## Proposed Changes
+
+### 1 — `requirements.txt`
+
+#### [MODIFY] [requirements.txt](file:///c:/Programs/Python/skyvault/requirements.txt)
+
+Add pinned AI dependencies:
+```
+anthropic==0.42.0
+openai==1.59.8
+pgvector==0.3.6
+pdfplumber==0.11.4
+```
+
+---
+
+### 2 — `skyvault/settings.py`
+
+#### [MODIFY] [settings.py](file:///c:/Programs/Python/skyvault/skyvault/settings.py)
+
+Add AI configuration settings:
+```python
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL", "claude-sonnet-4-20250514")
+AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "text-embedding-3-small")
+AI_EMBEDDING_DIMENSIONS = 1536
+```
+
+---
+
+### 3 — `ai_features/migrations/0002_enable_pgvector.py`
+
+#### [NEW] `ai_features/migrations/0002_enable_pgvector.py`
+
+Add migration operation using `pgvector.django.VectorExtension()` to enable the `vector` extension in PostgreSQL.
+
+---
+
+### 4 — Service Layer (`ai_features/services/`)
+
+#### [NEW] `ai_features/services/__init__.py`
+#### [NEW] `ai_features/services/claude.py`
+
+Implement Claude API client wrapper:
+- `get_anthropic_client()`
+- `generate_json(system_prompt, user_content, schema_description) -> dict` (with robust JSON extraction and 1-level retry logic).
+
+#### [NEW] `ai_features/services/embeddings.py`
+
+Implement OpenAI embeddings wrapper:
+- `get_openai_client()`
+- `embed_text(text: str) -> list[float]`
+- `embed_texts(texts: list[str]) -> list[list[float]]` (batch processing).
+
+---
+
+### 5 — Smoke Test Command (`ai_features/management/`)
+
+#### [NEW] `ai_features/management/__init__.py`
+#### [NEW] `ai_features/management/commands/__init__.py`
+#### [NEW] `ai_features/management/commands/ai_smoke_test.py`
+
+Management command (`python manage.py ai_smoke_test`):
+1. Verifies `pgvector` extension is active in PostgreSQL.
+2. Checks API key environment configuration.
+3. Tests Claude JSON generation (mock / real call if key provided).
+4. Tests OpenAI embedding generation (mock / real call if key provided).
+
+---
+
+## Verification Plan
+
+### Automated Build & Migrations
+```bash
+docker-compose up --build -d
+docker-compose exec -T web-skyvault python manage.py migrate
+docker-compose exec -T web-skyvault python manage.py check
+```
+
+### Smoke Test Execution
+```bash
+docker-compose exec -T web-skyvault python manage.py ai_smoke_test
+```

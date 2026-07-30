@@ -78,3 +78,24 @@ def storage_usage_over_time(request):
         'usage_data': usage_data,
         'storage_quota': storage_quota
     }, safe=False)
+
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def ai_insight(request):
+    """
+    GET /dashboard/ai-insight/
+    Returns a cached or freshly-generated Claude storage insight for the current user.
+    Accepts ?refresh=1 to force regeneration.
+    """
+    from ai_features.services.insights import generate_storage_insight
+    force = request.GET.get("refresh", "0") == "1"
+    result = generate_storage_insight(request.user, force_refresh=force)
+    return JsonResponse({
+        "insight": result["insight"],
+        "generated_at": result["generated_at"],
+        "stats": result["stats"],
+        "from_cache": result["from_cache"],
+    })
+

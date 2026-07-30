@@ -1,69 +1,130 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}{{ user.username }} — Profile · SkyVault{% endblock %}
 
 {% block content %}
-<div id="profile-container">
-    <h2>{{ user.username }}'s Profile</h2>
-    <div id="profile-info">
-        {% if user_profile.profile_picture %}
-            <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
-        {% else %}
-            <img src="{% static 'images/default_profile.jpg' %}" alt="Default Profile Picture" class="profile-avatar">
-        {% endif %}
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Bio:</strong> {{ user_profile.bio }}</p>
+<div class="page-header">
+    <div class="header-title">
+        <h2><span class="material-icons title-icon">account_circle</span> Profile</h2>
+        <p class="subtitle">Manage your account information and preferences.</p>
     </div>
-    <a href="{% url 'update_profile_view' %}" class="profile-button">Update Profile</a>
-    <a href="#" class="profile-button logout-button" onclick="openModal()">Logout</a>
 </div>
 
 {% if messages %}
-<div class="profile-message-container">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
-    {% endfor %}
-</div>
+{% for message in messages %}
+<div class="toast toast-{{ message.tags }} show" style="opacity:1;transform:none;position:relative;margin-bottom:12px;max-width:480px;">{{ message }}</div>
+{% endfor %}
 {% endif %}
 
-<!-- Logout Modal -->
-<div id="logout-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal()">×</span>
-        <h3>Confirm Logout</h3>
-        <p>Are you sure you want to log out?</p>
-        <div class="modal-actions">
-            <button onclick="confirmLogout()" class="modal-button confirm-logout">Yes, Log Out</button>
-            <button onclick="closeModal()" class="modal-button cancel-logout">Cancel</button>
+<div class="profile-layout">
+
+    <!-- Left: Avatar Card -->
+    <div class="profile-avatar-card">
+        <div class="avatar-wrapper">
+            {% if user_profile.profile_picture %}
+                <img src="{{ user_profile.profile_picture.url }}" alt="Profile picture" class="profile-avatar-img" style="width:110px;height:110px;max-width:110px;object-fit:cover;border-radius:50%;">
+            {% else %}
+                <img src="{% static 'images/default_profile.jpg' %}" alt="Default profile picture" class="profile-avatar-img" style="width:110px;height:110px;max-width:110px;object-fit:cover;border-radius:50%;">
+            {% endif %}
+            <div class="avatar-overlay">
+                <a href="{% url 'update_profile_view' %}" class="avatar-edit-btn" title="Change picture">
+                    <span class="material-icons">photo_camera</span>
+                </a>
+            </div>
         </div>
+        <h3 class="profile-display-name">{{ user.username }}</h3>
+        <p class="profile-email">{{ user.email }}</p>
+
+        <div class="profile-actions">
+            <a href="{% url 'update_profile_view' %}" class="btn btn-primary" style="width:100%; text-align:center;">
+                <span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:4px;">edit</span> Edit Profile
+            </a>
+            <button class="btn btn-secondary" style="width:100%; margin-top:8px;" onclick="SkyVaultProfile.openLogoutModal()">
+                <span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:4px;">logout</span> Log Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Right: Info Cards -->
+    <div class="profile-details">
+
+        <div class="profile-info-card">
+            <div class="info-card-header">
+                <span class="material-icons">person</span>
+                <h4>Account Information</h4>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Username</span>
+                <span class="info-value">{{ user.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ user.email|default:"Not set" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Bio</span>
+                <span class="info-value">{{ user_profile.bio|default:"No bio yet — add one in Edit Profile." }}</span>
+            </div>
+        </div>
+
+        <div class="profile-info-card">
+            <div class="info-card-header">
+                <span class="material-icons">storage</span>
+                <h4>Storage Usage</h4>
+            </div>
+            <div class="storage-bar" style="margin-bottom:8px;">
+                <div class="storage-bar-fill" style="width: {{ used_percentage|default:0|floatformat:0 }}%;"></div>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Used</span>
+                <span class="info-value">{{ total_storage|default:0|floatformat:1 }} MB of {{ max_storage|default:100 }} MB</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Available</span>
+                <span class="info-value">
+                    {% if max_storage and total_storage %}
+                        {{ max_storage|floatformat:1|add:"-total_storage" }} MB
+                    {% else %}
+                        100 MB
+                    {% endif %}
+                </span>
+            </div>
+            <a href="{% url 'storage_info' %}" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--accent-color);text-decoration:none;margin-top:8px;">
+                <span class="material-icons" style="font-size:16px;">open_in_new</span> Storage Details
+            </a>
+        </div>
+
     </div>
 </div>
 
-
+<!-- Logout Confirmation Modal -->
+<div id="logout-modal" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-backdrop" onclick="SkyVaultProfile.closeLogoutModal()"></div>
+    <div class="modal-card" style="max-width: 400px; text-align: center;">
+        <span class="material-icons" style="font-size:48px; color:var(--danger-color); margin-bottom:12px;">logout</span>
+        <h3>Log Out?</h3>
+        <p>You'll be signed out of your SkyVault account. All your files will remain safe.</p>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn btn-secondary" onclick="SkyVaultProfile.closeLogoutModal()">Cancel</button>
+            <a href="{% url 'logout_view' %}" class="btn btn-danger">Log Out</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    function openModal() {
-        document.getElementById("logout-modal").style.display = "block";
+const SkyVaultProfile = {
+    openLogoutModal() {
+        const m = document.getElementById('logout-modal');
+        m.classList.add('open'); m.setAttribute('aria-hidden', 'false');
+    },
+    closeLogoutModal() {
+        const m = document.getElementById('logout-modal');
+        m.classList.remove('open'); m.setAttribute('aria-hidden', 'true');
     }
-
-    function closeModal() {
-        document.getElementById("logout-modal").style.display = "none";
-    }
-
-    function confirmLogout() {
-        window.location.href = "{% url 'logout_view' %}"; // Redirect to the logout URL
-    }
-
-    // Close the modal if the user clicks outside of it
-    window.onclick = function(event) {
-        const modal = document.getElementById("logout-modal");
-        if (event.target == modal) {
-            closeModal();
-        }
-    };
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') SkyVaultProfile.closeLogoutModal(); });
 </script>
 {% endblock %}

@@ -1,28 +1,62 @@
-version: '3.9'
-
 services:
   web-skyvault:
     build: .
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     depends_on:
-      - db-skyvault
+      db-skyvault:
+        condition: service_healthy
     environment:
       - DB_NAME=postgres
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_HOST=db-skyvault
       - DB_PORT=5432
-      - DJANGO_ENV=docker  # Added this line to indicate the environment
+      - DJANGO_ENV=docker
+      - SECRET_KEY=${SECRET_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AI_CLAUDE_MODEL=${AI_CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-text-embedding-3-small}
+
+  qcluster:
+    build: .
+    command: python manage.py qcluster
+    volumes:
+      - .:/app
+    depends_on:
+      db-skyvault:
+        condition: service_healthy
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db-skyvault
+      - DB_PORT=5432
+      - DJANGO_ENV=docker
+      - SECRET_KEY=${SECRET_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AI_CLAUDE_MODEL=${AI_CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-text-embedding-3-small}
+
 
   db-skyvault:
-    image: postgres:latest
+    image: pgvector/pgvector:pg16
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

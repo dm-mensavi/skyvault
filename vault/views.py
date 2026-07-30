@@ -7,6 +7,9 @@ from .forms import *
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # views.py
@@ -173,24 +176,85 @@ def view_folder(request, folder_id):
         'files': files,
     })
 
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
+
 @login_required
+@xframe_options_sameorigin
 def open_file(request, file_id):
     file_instance = get_object_or_404(File, id=file_id, user=request.user)
+    if not file_instance.uploaded_file:
+        return JsonResponse({'error': 'File missing'}, status=404)
 
-    # Determine file type from extension
     file_extension = file_instance.uploaded_file.name.split('.')[-1].lower()
-    
-    # If the file is an image or text, try displaying it directly
-    if file_extension in ['jpg', 'jpeg', 'png', 'gif']:
-        return FileResponse(file_instance.uploaded_file.open(), content_type=f'image/{file_extension}')
-    
-    elif file_extension in ['txt', 'pdf']:
-        return FileResponse(file_instance.uploaded_file.open(), content_type='application/pdf' if file_extension == 'pdf' else 'text/plain')
 
-    # For other file types, prompt download
-    response = FileResponse(file_instance.uploaded_file.open(), as_attachment=True)
-    response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
-    return response
+    try:
+        if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']:
+            content_type = 'image/svg+xml' if file_extension == 'svg' else f'image/{file_extension}'
+            response = FileResponse(file_instance.uploaded_file.open('rb'), content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{file_instance.name}"'
+            return response
+        elif file_extension == 'pdf':
+            response = FileResponse(file_instance.uploaded_file.open('rb'), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{file_instance.name}"'
+            return response
+        elif file_extension in ['txt', 'md', 'json', 'py', 'js', 'html', 'css']:
+            response = FileResponse(file_instance.uploaded_file.open('rb'), content_type='text/plain')
+            response['Content-Disposition'] = f'inline; filename="{file_instance.name}"'
+            return response
+
+        response = FileResponse(file_instance.uploaded_file.open('rb'), as_attachment=True)
+        response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
+        return response
+    except (FileNotFoundError, OSError):
+        return JsonResponse({'error': 'File missing from storage'}, status=404)
+
+
+
+
+@login_required
+def file_preview_data(request, file_id):
+    """
+    Returns JSON payload for in-app file preview overlay modal, including AI readiness fields.
+    """
+    file_instance = get_object_or_404(File, id=file_id, user=request.user)
+    ext = file_instance.uploaded_file.name.split('.')[-1].lower() if file_instance.uploaded_file else ''
+
+    # Check for existing analysis (Phase 1 AI hook)
+    analysis = getattr(file_instance, 'analysis', None)
+    ai_data = {
+        'status': getattr(analysis, 'status', 'pending'),
+        'summary': getattr(analysis, 'summary', ''),
+        'tags': getattr(analysis, 'tags', []),
+        'suggested_folder': getattr(analysis, 'suggested_folder', '')
+    } if analysis else None
+
+    text_content = None
+    if ext in ['txt', 'md', 'json', 'py', 'js', 'html', 'css']:
+        try:
+            file_instance.uploaded_file.open('r')
+            text_content = file_instance.uploaded_file.read(8000)
+            file_instance.uploaded_file.close()
+        except Exception:
+            text_content = None
+
+    preview_url = f"/vault/open-file/{file_instance.id}/" if file_instance.uploaded_file else ""
+
+    return JsonResponse({
+        'success': True,
+        'id': file_instance.id,
+        'name': file_instance.name,
+        'size': file_instance.size,
+        'extension': ext,
+        'url': preview_url,
+        'created_at': file_instance.created_at.strftime('%Y-%m-%d %H:%M'),
+        'starred': file_instance.starred,
+        'text_content': text_content,
+        'ai_analysis': ai_data,
+    })
+
+
+
 
 
 @login_required
@@ -202,7 +266,7 @@ def paste(request):
         action = data.get("action")
         target_folder_id = data.get("target_folder")
 
-        print("Paste action data received:", data)  # Debug print
+        logger.debug("Paste action received: item_id=%s type=%s action=%s", item_id, item_type, action)
 
         # Get the target folder
         if target_folder_id:
@@ -231,16 +295,14 @@ def paste(request):
                 new_file.uploaded_file.save(item.uploaded_file.name, ContentFile(file_content))
                 new_file.save()
                 message = "File copied successfully!"
-                print(message)  # Debug print
+                logger.info("File id=%s copied to folder id=%s", item.id, getattr(target_folder, 'id', 'root'))
 
             elif action == "cut":
                 # Move the file to the target folder
-                print(f"Before moving: File {item.id} in folder {item.folder_id}")
                 item.folder = target_folder
                 item.save()
-                print(f"After moving: File {item.id} in folder {item.folder_id}")
+                logger.info("File id=%s moved to folder id=%s", item.id, getattr(target_folder, 'id', 'root'))
                 message = "File moved successfully!"
-                print(message)  # Debug print
 
             else:
                 return JsonResponse({"success": False, "message": "Invalid action"}, status=400)
@@ -281,14 +343,14 @@ def paste(request):
 
                 copy_folder(item, target_folder)
                 message = "Folder copied successfully!"
-                print(message)  # Debug print
+                logger.info("Folder id=%s copied to folder id=%s", item.id, getattr(target_folder, 'id', 'root'))
 
             elif action == "cut":
                 # Move the folder to the target location
                 item.parent_folder = target_folder
                 item.save()
                 message = "Folder moved successfully!"
-                print(message)  # Debug print
+                logger.info("Folder id=%s moved to folder id=%s", item.id, getattr(target_folder, 'id', 'root'))
 
             else:
                 return JsonResponse({"success": False, "message": "Invalid action"}, status=400)
@@ -352,26 +414,42 @@ def trash_view(request):
 
 @login_required
 def shared_view(request):
-    shared_files = request.user.shared_files.all()  # Files shared with the user
+    shared_files = request.user.shared_files.filter(trashed=False)
     return render(request, 'vault/shared.html', {'shared_files': shared_files})
 
 @login_required
 def search_view(request):
-    query = request.GET.get('q', '')
-    results = File.objects.filter(user=request.user, name__icontains=query, trashed=False) if query else []
-    return render(request, 'vault/search.html', {'results': results, 'query': query})
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return render(request, 'vault/search.html', {'results': [], 'semantic_results': [], 'query': ''})
+
+    # 1. Filename match
+    filename_results = File.objects.filter(user=request.user, name__icontains=query, trashed=False)
+
+    # 2. Semantic vector match (Phase 2)
+    from ai_features.services.search import search_files
+    semantic_results = search_files(request.user, query, top_k=10)
+
+    return render(request, 'vault/search.html', {
+        'results': filename_results,
+        'semantic_results': semantic_results,
+        'query': query
+    })
+
 
 @login_required
 def recent_files(request):
-    # Fetch recent files, ordering by date uploaded or modified
-    recent_files = File.objects.filter(user=request.user).order_by('-id')[:10]  # Adjust limit as needed
-    return render(request, 'vault/recent_files.html', {'files': recent_files})
+    files = File.objects.filter(user=request.user, trashed=False).order_by('-id')[:20]
+    return render(request, 'vault/recent_files.html', {'files': files})
 
 @login_required
 def starred_files(request):
-    # Fetch starred files (assuming `starred` is a boolean field we add to File model)
-    starred_files = File.objects.filter(user=request.user, starred=True)
-    return render(request, 'vault/starred_files.html', {'files': starred_files})
+    starred_files = File.objects.filter(user=request.user, starred=True, trashed=False)
+    # Folder model has no starred field — omit starred_folders
+    return render(request, 'vault/starred_files.html', {
+        'starred_files': starred_files,
+        'starred_folders': [],
+    })
 
 @login_required
 def storage_info(request):
@@ -402,15 +480,10 @@ def toggle_star(request):
         else:
             return JsonResponse({"success": False, "message": "Invalid item type"}, status=400)
 
-        # Print current status before changing
-        print(f"Current starred status for {item_type} {item_id}: {item.starred}")
-
         # Toggle the starred status
         item.starred = not item.starred
         item.save()
-
-        # Print new status to confirm change
-        print(f"New starred status for {item_type} {item_id}: {item.starred}")
+        logger.info("%s id=%s starred=%s", item_type, item_id, item.starred)
 
         status = "starred" if item.starred else "unstarred"
         return JsonResponse({"success": True, "message": f"{item_type.capitalize()} successfully {status}."})

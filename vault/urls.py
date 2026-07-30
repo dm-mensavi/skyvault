@@ -2,6 +2,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
+from ai_features import views as ai_views
+
 
 urlpatterns = [
     path("", views.vault_home, name="vault_home"),
@@ -9,6 +11,7 @@ urlpatterns = [
     path('create-folder/', views.create_folder, name='create_folder'),
     path('folder/<int:folder_id>/', views.view_folder, name='view_folder'),
     path('open-file/<int:file_id>/', views.open_file, name='open_file'),
+    path('preview-file/<int:file_id>/', views.file_preview_data, name='file_preview_data'),
     path('paste/', views.paste, name='paste'),
     path("trash/", views.trash_view, name="trash_view"),
     path("shared/", views.shared_view, name="shared_view"),
@@ -21,6 +24,8 @@ urlpatterns = [
     path('delete-folder/<int:folder_id>/', views.delete_folder, name='delete_folder'),
     path('restore/<str:item_type>/<int:item_id>/', views.restore_item, name='restore_item'),
     path('delete-permanent/<str:item_type>/<int:item_id>/', views.delete_permanent_item, name='delete_permanent_item'),
+    path('ask/', ai_views.ask_vault, name='ask_vault'),
+
 
 ]
 

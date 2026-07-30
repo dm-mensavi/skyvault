@@ -1,416 +1,254 @@
-//->Handle message alerts
-document.addEventListener("DOMContentLoaded", function () {
-	setTimeout(function () {
-		let messages = document.querySelectorAll(".alert");
-		messages.forEach(function (message) {
-			message.style.display = "none";
-		});
-	}, 5000); // Adjust time as needed (5000 ms = 5 seconds)
-});
+/**
+ * SkyVaultDrive – vault-page specific JS
+ * Handles: right-click item context menu, delete (with SkyVault.confirm modal),
+ * copy/cut/paste, star, open / preview actions.
+ * Depends on SkyVault global object in base.js.
+ */
 
-   document.querySelector("[data-action='delete']").addEventListener("click", function () {
-        if (selectedItemId && selectedItemType) {
-            if (confirm(`Are you sure you want to delete this ${selectedItemType}?`)) {
-                fetch(`/vault/delete-${selectedItemType}/${selectedItemId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrfToken
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showAlert(`${selectedItemType.charAt(0).toUpperCase() + selectedItemType.slice(1)} deleted successfully.`, "success");
-                        location.reload();
-                    } else {
-                        showAlert(`Error deleting ${selectedItemType}.`, "danger");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert("An error occurred while deleting.", "danger");
-                });
-            }
-        }
-        hideContextMenu();
+const SkyVaultDrive = (() => {
+  const csrfToken = () => SkyVault.getCsrfToken();
+  let selectedItemId = null;
+  let selectedItemType = null;
+  let selectedItemName = '';
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  function getCurrentFolderId() {
+    // folder id stored on .drive-container or drive-header data-folder-id
+    return document.querySelector('[data-folder-id]')?.dataset.folderId || null;
+  }
+
+  function hideContextMenu() {
+    const menu = document.getElementById('item-context-menu');
+    if (menu) menu.classList.remove('open');
+    SkyVault.hideContextMenus?.();
+  }
+
+  function showItemContextMenu(x, y) {
+    const menu = document.getElementById('item-context-menu');
+    if (!menu) return;
+    SkyVault.hideContextMenus?.();
+    menu.style.left = `${x}px`;
+    menu.style.top  = `${y}px`;
+    menu.classList.add('open');
+  }
+
+  // ─── Create Folder Modal ─────────────────────────────────────────────────────
+  function openCreateFolderModal() {
+    const modal = document.getElementById('folder-modal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('new-folder-name')?.focus(), 100);
+    }
+  }
+
+  function closeCreateFolderModal() {
+    const modal = document.getElementById('folder-modal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  // ─── Delete (move to trash) ──────────────────────────────────────────────────
+  async function deleteItem() {
+    if (!selectedItemId || !selectedItemType) return;
+    hideContextMenu();
+
+    const confirmed = await SkyVault.confirm({
+      title: 'Move to Trash',
+      message: `Move "${selectedItemName}" to trash?`,
+      confirmLabel: 'Move to Trash',
+      danger: true,
     });
+    if (!confirmed) return;
 
-//$ Right click event listeners for filtering options
-//$ Right click event listeners for filtering options
-//$ Right click event listeners for filtering options
-document.addEventListener("DOMContentLoaded", function () {
-  const contextMenu = document.querySelector(".context-menu");
-  const driveContainer = document.querySelector(".drive-container");
-  const fileFolderItems = document.querySelectorAll(".file-folder-only"); // Select file/folder-specific items
-  let selectedItemId = null;
-  let selectedItemType = null;
-
-  // Function to show the context menu at a specific position
-  function showContextMenu(x, y) {
-      contextMenu.style.top = `${y}px`;
-      contextMenu.style.left = `${x}px`;
-      contextMenu.style.display = "block";
-  }
-
-  // Function to hide the context menu
-  function hideContextMenu() {
-      contextMenu.style.display = "none";
-  }
-
-  // Function to control the visibility of file/folder-specific items
-  function setFileFolderOptionsVisibility(visible) {
-      fileFolderItems.forEach(item => {
-          item.style.display = visible ? "block" : "none";
+    try {
+      const res = await fetch(`/vault/delete-${selectedItemType}/${selectedItemId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken() },
       });
-  }
-
-  // Event listener for right-click on drive container
-  driveContainer.addEventListener("contextmenu", function (e) {
-      e.preventDefault(); // Prevent the default context menu from showing
-      hideContextMenu(); // Hide any existing context menu
-
-      // Check if the click was on a file or folder
-      const fileItem = e.target.closest(".file-item");
-      if (fileItem) {
-          // Right-clicked on a file or folder
-          selectedItemId = fileItem.dataset.id;
-          selectedItemType = fileItem.dataset.type;
-          setFileFolderOptionsVisibility(true); // Show file/folder-specific options
+      if (res.ok) {
+        SkyVault.showToast(`${selectedItemType === 'file' ? 'File' : 'Folder'} moved to trash.`, 'success');
+        setTimeout(() => location.reload(), 600);
       } else {
-          // Right-clicked on empty space
-          selectedItemId = null;
-          selectedItemType = null;
-          setFileFolderOptionsVisibility(false); // Hide file/folder-specific options
+        SkyVault.showToast('Error moving item to trash.', 'error');
       }
-
-      // Show the context menu at the clicked position
-      showContextMenu(e.pageX, e.pageY);
-  });
-
-  // Hide the context menu when clicking elsewhere on the document
-  document.addEventListener("click", function () {
-      hideContextMenu();
-  });
-});
-
-//$ Right click event listeners for filtering options
-//$ Right click event listeners for filtering options
-//$ Right click event listeners for filtering options
-
-//->Event Listener for the "Open" Action
-//->Event Listener for the "Open" Action
-//->Event Listener for the "Open" Action
-
-document.addEventListener("DOMContentLoaded", function () {
-  const contextMenu = document.querySelector(".context-menu");
-  const driveContainer = document.querySelector(".drive-container");
-  const fileFolderItems = document.querySelectorAll(".file-folder-only");
-  let selectedItemId = null;
-  let selectedItemType = null;
-
-  // Show the context menu at a specific position
-  function showContextMenu(x, y) {
-      contextMenu.style.top = `${y}px`;
-      contextMenu.style.left = `${x}px`;
-      contextMenu.style.display = "block";
+    } catch (err) {
+      console.error(err);
+      SkyVault.showToast('Network error.', 'error');
+    }
   }
 
-  // Hide the context menu
-  function hideContextMenu() {
-      contextMenu.style.display = "none";
-  }
+  // ─── Star/Unstar ────────────────────────────────────────────────────────────
+  async function toggleStar() {
+    if (!selectedItemId || !selectedItemType) return;
+    hideContextMenu();
 
-  // Toggle visibility of file/folder-specific options
-  function setFileFolderOptionsVisibility(visible) {
-      fileFolderItems.forEach(item => {
-          item.style.display = visible ? "block" : "none";
+    try {
+      const res = await fetch('/vault/toggle-star/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken(),
+        },
+        body: JSON.stringify({ item_id: selectedItemId, item_type: selectedItemType }),
       });
+      const data = await res.json();
+      SkyVault.showToast(data.message || 'Star toggled.', data.success ? 'success' : 'error');
+      if (data.success) setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      SkyVault.showToast('Error toggling star.', 'error');
+    }
   }
 
-  // Handle right-click on drive container
-  driveContainer.addEventListener("contextmenu", function (e) {
-      e.preventDefault();
-      hideContextMenu();
+  // ─── Copy / Cut / Paste ──────────────────────────────────────────────────────
+  function copyItem() {
+    if (!selectedItemId) return;
+    sessionStorage.setItem('skyvault-clipboard', JSON.stringify({
+      id: selectedItemId, type: selectedItemType, name: selectedItemName, action: 'copy',
+    }));
+    SkyVault.showToast(`"${selectedItemName}" copied to clipboard.`, 'info');
+    hideContextMenu();
+  }
 
-      const fileItem = e.target.closest(".file-item");
-      if (fileItem) {
-          selectedItemId = fileItem.dataset.id;
-          selectedItemType = fileItem.dataset.type; // "file" or "folder"
-          setFileFolderOptionsVisibility(true);
-      } else {
-          selectedItemId = null;
-          selectedItemType = null;
-          setFileFolderOptionsVisibility(false);
-      }
+  function cutItem() {
+    if (!selectedItemId) return;
+    sessionStorage.setItem('skyvault-clipboard', JSON.stringify({
+      id: selectedItemId, type: selectedItemType, name: selectedItemName, action: 'cut',
+    }));
+    SkyVault.showToast(`"${selectedItemName}" cut to clipboard.`, 'info');
+    hideContextMenu();
+  }
 
-      showContextMenu(e.pageX, e.pageY);
-  });
-
-  // Hide context menu on clicking elsewhere
-  document.addEventListener("click", function () {
-      hideContextMenu();
-  });
-
-  // Add event listener for "Open" functionality
-  document.querySelector("[data-action='open']").addEventListener("click", function () {
-      if (selectedItemId && selectedItemType) {
-          if (selectedItemType === "folder") {
-              // Redirect to the folder's view page
-              window.location.href = `/vault/folder/${selectedItemId}/`;
-          } else if (selectedItemType === "file") {
-              // Redirect to the file's open/download endpoint
-              window.location.href = `/vault/open-file/${selectedItemId}/`;
-          }
-      }
-      hideContextMenu();
-  });
-});
-
-
-//->Event Listener for the "Open" Action
-//->Event Listener for the "Open" Action
-//->Event Listener for the "Open" Action
-
-
-//!Copy, Cut, and Paste Actions
-//!Copy, Cut, and Paste Actions
-//!Copy, Cut, and Paste Actions
-document.addEventListener("DOMContentLoaded", function () {
-  const contextMenu = document.querySelector(".context-menu");
-  const driveContainer = document.querySelector(".drive-container");
-  const messageContainer = document.querySelector(".message-container");
-  const fileFolderItems = document.querySelectorAll(".file-folder-only");
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  let selectedItemId = null;
-  let selectedItemType = null;
-
-    // Function to display alerts in the message container
-    function showAlert(message, type = 'info') {
-        if (messageContainer) {
-            const alertDiv = document.createElement('div');
-            alertDiv.classList.add('alert', `alert-${type}`);
-            alertDiv.textContent = message;
-            messageContainer.appendChild(alertDiv);
-            setTimeout(() => alertDiv.remove(), 5000); // Auto-remove after 5 seconds
-        }
+  async function pasteItem() {
+    const clipboard = JSON.parse(sessionStorage.getItem('skyvault-clipboard') || 'null');
+    if (!clipboard) {
+      SkyVault.showToast('Clipboard is empty.', 'info');
+      return;
     }
 
-    // Event listener for "Star" functionality in the context menu
-    document.querySelector("[data-action='star']").addEventListener("click", function () {
-        if (selectedItemId && selectedItemType) {
-            fetch(`/vault/toggle-star/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: JSON.stringify({
-                    item_id: selectedItemId,
-                    item_type: selectedItemType
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showAlert(data.message, data.success ? "success" : "danger");
-                if (data.success) location.reload();  // Reload to reflect the updated star status
-            })
-            .catch(error => showAlert("An error occurred while toggling star status.", "danger"));
-        }
-        hideContextMenu();
-    });
+    // Determine target folder: if right-clicked directly on a folder card, paste into that folder;
+    // otherwise paste into the current page folder.
+    let targetFolder = getCurrentFolderId();
+    if (selectedItemType === 'folder' && selectedItemId) {
+      targetFolder = selectedItemId;
+    }
 
-   document.querySelector("[data-action='delete']").addEventListener("click", function () {
-        if (selectedItemId && selectedItemType) {
-            if (confirm(`Are you sure you want to delete this ${selectedItemType}?`)) {
-                fetch(`/vault/delete-${selectedItemType}/${selectedItemId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrfToken
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showAlert(`${selectedItemType.charAt(0).toUpperCase() + selectedItemType.slice(1)} deleted successfully.`, "success");
-                        location.reload();
-                    } else {
-                        showAlert(`Error deleting ${selectedItemType}.`, "danger");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert("An error occurred while deleting.", "danger");
-                });
-            }
-        }
-        hideContextMenu();
-    });
-
-  // Get the current folder ID from the data attribute
-  const currentFolderId = driveContainer.dataset.folderId || null;
-  let targetFolderId = currentFolderId;
-
-  function showAlert(message, messageType = 'info') {
-      // Use the existing message container to display messages
-      if (messageContainer) {
-          // Create a new alert div
-          const alertDiv = document.createElement('div');
-          alertDiv.classList.add('alert', `alert-${messageType}`);
-          alertDiv.textContent = message;
-
-          // Append the new alert to the message container
-          messageContainer.appendChild(alertDiv);
-
-          // Remove the alert after 5 seconds
-          setTimeout(() => {
-              alertDiv.remove();
-          }, 5000);
-      } else {
-          // If messageContainer doesn't exist, create it
-          const newMessageContainer = document.createElement('div');
-          newMessageContainer.classList.add('message-container');
-          document.body.prepend(newMessageContainer);
-
-          const alertDiv = document.createElement('div');
-          alertDiv.classList.add('alert', `alert-${messageType}`);
-          alertDiv.textContent = message;
-          newMessageContainer.appendChild(alertDiv);
-
-          // Remove the alert after 5 seconds
-          setTimeout(() => {
-              alertDiv.remove();
-          }, 5000);
-      }
-  }
-
-  // Show the context menu at a specific position
-  function showContextMenu(x, y) {
-      contextMenu.style.top = `${y}px`;
-      contextMenu.style.left = `${x}px`;
-      contextMenu.style.display = "block";
-  }
-
-  // Hide the context menu
-  function hideContextMenu() {
-      contextMenu.style.display = "none";
-  }
-
-  // Toggle visibility of file/folder-specific options
-  function setFileFolderOptionsVisibility(visible) {
-      fileFolderItems.forEach(item => {
-          item.style.display = visible ? "block" : "none";
+    try {
+      const res = await fetch('/vault/paste/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        body: JSON.stringify({
+          item_id: clipboard.id,
+          item_type: clipboard.type,
+          action: clipboard.action,
+          target_folder: targetFolder,
+        }),
       });
+      const data = await res.json();
+      SkyVault.showToast(data.message || (data.success ? 'Pasted.' : 'Error pasting.'), data.success ? 'success' : 'error');
+      if (data.success) {
+        sessionStorage.removeItem('skyvault-clipboard');
+        setTimeout(() => location.reload(), 600);
+      }
+    } catch (err) {
+      SkyVault.showToast('Network error during paste.', 'error');
+    }
   }
 
-  // Handle right-click on drive container
-  driveContainer.addEventListener("contextmenu", function (e) {
+  // ─── Context menu binding ────────────────────────────────────────────────────
+  function bindItemContextMenu() {
+    const mainPanel = document.querySelector('.main-panel');
+    if (!mainPanel) return;
+
+    mainPanel.addEventListener('contextmenu', (e) => {
+      const card = e.target.closest('.drive-card');
+      if (!card) return; // let base.js global handler deal with empty space
       e.preventDefault();
-      hideContextMenu();
+      e.stopPropagation();
 
-      const fileItem = e.target.closest(".file-item");
-      if (fileItem) {
-          selectedItemId = fileItem.dataset.id;
-          selectedItemType = fileItem.dataset.type; // "file" or "folder"
-          setFileFolderOptionsVisibility(true);
-          // Do not change targetFolderId; it should remain as the current folder
-      } else {
-          selectedItemId = null;
-          selectedItemType = null;
-          setFileFolderOptionsVisibility(false);
-      }
+      selectedItemId   = card.dataset.id;
+      selectedItemType = card.dataset.type;
+      selectedItemName = card.dataset.name || card.querySelector('.card-title')?.textContent.trim() || '';
 
-      showContextMenu(e.pageX, e.pageY);
-  });
+      showItemContextMenu(e.clientX, e.clientY);
+    });
 
-  // Hide context menu on clicking elsewhere
-  document.addEventListener("click", function () {
-      hideContextMenu();
-  });
+    document.addEventListener('click', hideContextMenu);
+  }
 
-  // Add event listener for "Copy" functionality
-  document.querySelector("[data-action='copy']").addEventListener("click", function () {
-      if (selectedItemId && selectedItemType) {
-          sessionStorage.setItem("clipboard", JSON.stringify({
-              id: selectedItemId,
-              type: selectedItemType,
-              action: "copy"
-          }));
-          showAlert("Item copied to clipboard!", "success");
+  function bindContextMenuActions() {
+    const safe = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', fn);
+    };
+
+    safe('ctx-open', () => {
+      if (!selectedItemId) return;
+      if (selectedItemType === 'folder') {
+        location.href = `/vault/folder/${selectedItemId}/`;
+      } else if (selectedItemType === 'file') {
+        window.open(`/vault/open-file/${selectedItemId}/`, '_blank');
       }
       hideContextMenu();
-  });
+    });
 
-  // Add event listener for "Cut" functionality
-  document.querySelector("[data-action='cut']").addEventListener("click", function () {
-      if (selectedItemId && selectedItemType) {
-          sessionStorage.setItem("clipboard", JSON.stringify({
-              id: selectedItemId,
-              type: selectedItemType,
-              action: "cut"
-          }));
-          showAlert("Item cut to clipboard!", "success");
+    safe('ctx-preview', () => {
+      if (!selectedItemId) return;
+      if (selectedItemType === 'file') {
+        SkyVault.openPreviewModal(selectedItemId);
+      } else if (selectedItemType === 'folder') {
+        location.href = `/vault/folder/${selectedItemId}/`;
       }
       hideContextMenu();
-  });
+    });
 
-  // Add event listener for "Paste" functionality
-  document.querySelector("[data-action='paste']").addEventListener("click", function () {
-      const clipboardData = JSON.parse(sessionStorage.getItem("clipboard"));
-      if (clipboardData) {
-          fetch(`/vault/paste/`, {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": csrfToken
-              },
-              body: JSON.stringify({
-                  item_id: clipboardData.id,
-                  item_type: clipboardData.type,
-                  action: clipboardData.action,
-                  target_folder: targetFolderId
-              })
-          })
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  showAlert(data.message, "success");
-                  location.reload(); // Reload to show the pasted item
-              } else {
-                  showAlert("Error: " + data.message, "danger");
-              }
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              showAlert("An error occurred while pasting.", "danger");
-          });
-          sessionStorage.removeItem("clipboard");
-      } else {
-          showAlert("Clipboard is empty!", "warning");
+    safe('ctx-cut',    cutItem);
+    safe('ctx-copy',   copyItem);
+    safe('ctx-paste',  pasteItem);
+    safe('ctx-star',   toggleStar);
+    safe('ctx-delete', deleteItem);
+  }
+
+  // ─── Dismiss folder modal on Escape ─────────────────────────────────────────
+  function bindKeyboard() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCreateFolderModal();
+        SkyVault.closePreviewModal?.();
+        hideContextMenu();
       }
-      hideContextMenu();
-  });
+    });
+  }
 
-  // Add event listener for "Open" functionality
-  document.querySelector("[data-action='open']").addEventListener("click", function () {
-      if (selectedItemId && selectedItemType) {
-          if (selectedItemType === "folder") {
-              // Redirect to the folder's view page
-              window.location.href = `/vault/folder/${selectedItemId}/`;
-          } else if (selectedItemType === "file") {
-              // Redirect to the file's open/download endpoint
-              window.location.href = `/vault/open-file/${selectedItemId}/`;
-          }
-      }
-      hideContextMenu();
-  });
+  // ─── Override global triggerCreateFolder & triggerUpload ────────────────────
+  function patchGlobalTriggers() {
+    SkyVault.triggerCreateFolder = () => openCreateFolderModal();
+    SkyVault.triggerUpload = () => {
+      const inp = document.getElementById('uploaded-file');
+      if (inp) inp.click();
+      else SkyVault.showToast('Navigate to My Drive or a Folder to upload.', 'info');
+    };
+  }
 
-  //delete event listener
-  
-});
+  // ─── Message auto-dismiss ────────────────────────────────────────────────────
+  function initMessageDismiss() {
+    setTimeout(() => {
+      document.querySelectorAll('#message-container .toast').forEach(el => el.remove());
+    }, 5000);
+  }
 
+  // ─── Init ────────────────────────────────────────────────────────────────────
+  function init() {
+    patchGlobalTriggers();
+    bindItemContextMenu();
+    bindContextMenuActions();
+    bindKeyboard();
+    initMessageDismiss();
+  }
 
-//!Copy, Cut, and Paste Actions
-//!Copy, Cut, and Paste Actions
-//!Copy, Cut, and Paste Actions
+  document.addEventListener('DOMContentLoaded', init);
 
-//->Handle star
-//->Handle star
-//->Handle star
+  return { openCreateFolderModal, closeCreateFolderModal, pasteItem };
+})();
