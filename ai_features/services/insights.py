@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum
 from vault.models import File
 from ai_features.models import FileAnalysis, StorageInsight
-from ai_features.services.claude import get_anthropic_client
+from ai_features.services.claude import generate_text
 
 logger = logging.getLogger(__name__)
 
@@ -86,43 +86,35 @@ def generate_storage_insight(user, force_refresh: bool = False) -> dict:
             "summaries, smart tags, and semantic search!"
         )
     else:
-        client = get_anthropic_client()
-        if not client:
-            insight_text = (
-                f"Your vault contains {stats['total_files']} files ({stats['total_mb']} MB). "
-                "Configure your Anthropic API key to unlock natural-language AI insights."
-            )
-        else:
-            # Build compact stats prompt
-            top_types = ", ".join(f"{k}: {v}" for k, v in list(stats["by_type"].items())[:5])
-            top_tags = ", ".join(f"{k}: {v}" for k, v in list(stats["by_tag"].items())[:5]) or "none yet"
-            largest = ", ".join(f"{f['name']} ({f['mb']} MB)" for f in stats["largest_files"][:3]) or "none"
+        # Build compact stats prompt
+        top_types = ", ".join(f"{k}: {v}" for k, v in list(stats["by_type"].items())[:5])
+        top_tags = ", ".join(f"{k}: {v}" for k, v in list(stats["by_tag"].items())[:5]) or "none yet"
+        largest = ", ".join(f"{f['name']} ({f['mb']} MB)" for f in stats["largest_files"][:3]) or "none"
 
-            user_prompt = (
-                f"Storage stats for this SkyVault user:\n"
-                f"- Total files: {stats['total_files']} ({stats['total_mb']} MB used)\n"
-                f"- File types: {top_types}\n"
-                f"- AI-detected tags: {top_tags}\n"
-                f"- Files untouched 6+ months: {stats['untouched_6mo']}\n"
-                f"- Largest files: {largest}\n"
-                f"- Items in trash: {stats['trashed_count']}\n"
-                "\nWrite a 2–3 sentence storage insight with one concrete action recommendation."
-            )
+        user_prompt = (
+            f"Storage stats for this SkyVault user:\n"
+            f"- Total files: {stats['total_files']} ({stats['total_mb']} MB used)\n"
+            f"- File types: {top_types}\n"
+            f"- AI-detected tags: {top_tags}\n"
+            f"- Files untouched 6+ months: {stats['untouched_6mo']}\n"
+            f"- Largest files: {largest}\n"
+            f"- Items in trash: {stats['trashed_count']}\n"
+            "\nWrite a 2–3 sentence storage insight with one concrete action recommendation."
+        )
 
-            try:
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=200,
-                    system=INSIGHT_SYSTEM_PROMPT,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                insight_text = response.content[0].text.strip() if response.content else ""
-            except Exception as e:
-                logger.error(f"Error generating storage insight for user {user.id}: {e}", exc_info=True)
+        try:
+            insight_text = generate_text(INSIGHT_SYSTEM_PROMPT, user_prompt, max_tokens=200).strip()
+            if not insight_text:
                 insight_text = (
-                    f"Your vault holds {stats['total_files']} files ({stats['total_mb']} MB). "
-                    "AI insight generation is temporarily unavailable."
+                    f"Your vault contains {stats['total_files']} files ({stats['total_mb']} MB). "
+                    "Configure an AI API key to unlock natural-language AI insights."
                 )
+        except Exception as e:
+            logger.error(f"Error generating storage insight for user {user.id}: {e}", exc_info=True)
+            insight_text = (
+                f"Your vault holds {stats['total_files']} files ({stats['total_mb']} MB). "
+                "AI insight generation is temporarily unavailable."
+            )
 
     # Upsert cached insight
     StorageInsight.objects.update_or_create(

@@ -1,0 +1,21 @@
+# Type-checker / language-server config.
+# Points Pyrefly at the project virtualenv so third-party imports (django,
+# anthropic, openai, pgvector, ...) resolve without needing the venv activated
+# in the editor's shell.
+
+# First-party imports: the repo root, so `ai_features.services.claude` etc. resolve.
+search-path = ["."]
+
+# Interpreter to query for site-packages.
+python-interpreter-path = ".venv/Scripts/python.exe"
+
+python-platform = "windows"
+python-version = "3.13"
+
+project-excludes = [
+    "**/.venv/**",
+    "**/migrations/**",
+    "**/__pycache__/**",
+    "**/media/**",
+    "**/static/**",
+]

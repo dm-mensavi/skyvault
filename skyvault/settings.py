@@ -164,9 +164,29 @@ MEDIA_URL = "/media/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # AI Features Configuration (Phase 0+)
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+# Generation is routed through an Anthropic-compatible gateway (AgentRouter)
+# rather than api.anthropic.com. Clear ANTHROPIC_BASE_URL to talk to Anthropic
+# directly. NOTE: the gateway only exposes /v1/messages — it has no
+# OpenAI-compatible surface, so embeddings must use a real OpenAI key.
+
+# Primary generation — Anthropic-compatible endpoint
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "")
+AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL") or os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
+
+# Secondary generation — used only when the primary path is unset or errors.
+# Also an Anthropic-compatible endpoint: the gateway serves non-Claude models
+# (e.g. gpt-5.6-sol) through /v1/messages. Leave AI_FALLBACK_MODEL empty to disable.
+AI_FALLBACK_MODEL = os.environ.get("AI_FALLBACK_MODEL", "")
+AI_FALLBACK_API_KEY = os.environ.get("AI_FALLBACK_API_KEY") or ANTHROPIC_API_KEY
+AI_FALLBACK_BASE_URL = os.environ.get("AI_FALLBACK_BASE_URL") or ANTHROPIC_BASE_URL
+
+# Embeddings — OpenAI-compatible endpoint (pgvector semantic search).
+# OPENAI_BASE_URL is configurable, but AgentRouter does NOT serve /v1/embeddings;
+# this needs a real OpenAI key against the default endpoint.
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL", "claude-sonnet-4-20250514")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
 AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "text-embedding-3-small")
 AI_EMBEDDING_DIMENSIONS = 1536
+
 

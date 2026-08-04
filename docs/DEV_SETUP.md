@@ -25,7 +25,7 @@ Copy `.env.example` to create your local `.env` file:
 ```bash
 cp .env.example .env
 ```
-*(Optionally add your `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` to test AI features)*
+*(Optionally add your `ANTHROPIC_AUTH_TOKEN` (generation) and `OPENAI_API_KEY` (embeddings) to test AI features — see the Required API Keys section in the Readme)*
 
 ### Step 3: Launch Containers with Docker Compose
 ```bash

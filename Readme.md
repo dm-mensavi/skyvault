@@ -144,16 +144,36 @@ SkyVault integrates AI for smart file management. Upload a document and receive 
 Set these in your `.env` file:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+# Generation — Anthropic-compatible endpoint.
+# Leave ANTHROPIC_BASE_URL empty to use api.anthropic.com directly,
+# or point it at a compatible gateway (e.g. AgentRouter).
+ANTHROPIC_AUTH_TOKEN=sk-...
+ANTHROPIC_BASE_URL=https://agentrouter.org
+ANTHROPIC_MODEL=claude-opus-5
+
+# Embeddings — requires a real OpenAI key.
+# Gateways generally do not serve /v1/embeddings.
 OPENAI_API_KEY=sk-...
 ```
 
 Optional overrides:
 
 ```env
-AI_CLAUDE_MODEL=claude-sonnet-4-20250514
+# Fallback generation model, used only if the primary endpoint is unset or errors.
+# Same Anthropic-compatible API; leave AI_FALLBACK_MODEL empty to disable.
+AI_FALLBACK_MODEL=gpt-5.6-sol
+AI_FALLBACK_API_KEY=sk-...
+AI_FALLBACK_BASE_URL=https://agentrouter.org
+
+OPENAI_BASE_URL=
 AI_EMBEDDING_MODEL=text-embedding-3-small
 AI_EMBEDDING_DIMENSIONS=1536
+```
+
+Verify your configuration with:
+
+```bash
+python manage.py ai_smoke_test
 ```
 
 ### Running the Evaluation
@@ -169,11 +189,30 @@ Results are written to `docs/EVAL_RESULTS.md`.
 
 ### Screenshots
 
-> *Tag chips and summary shown on the file detail page.*
+#### AI Insights & Summary — File Preview
+![AI insights on a file preview](static/images/AI_Insight_file1.png)
 
-> *Semantic search returns results ranked by relevance, not just filename match.*
+> *Opening a PDF shows the AI-generated summary, tag chips, and a suggested folder alongside the document preview.*
 
-> *Ask your vault returns a grounded answer with cited source files.*
+#### AI Insights in Dark Mode
+![AI insights on a file preview, dark mode](static/images/AI_Insight_file2.png)
+
+> *The same panel in dark mode — a cover letter summarized into tags (`#cover letter`, `#apprenticeship`, `#devops`) with `Job Applications` suggested as its folder.*
+
+#### Ask SkyVault AI (RAG Q&A)
+![Ask SkyVault AI dialog](static/images/Chatbox_Skyvault.png)
+
+> *The Ask SkyVault AI dialog. Questions are answered from your own documents by searching vector embeddings, with the exact source files cited.*
+
+#### Storage Analytics & AI Insights
+![Storage analytics dashboard with AI insight](static/images/AI_Analytics_dark.png)
+
+> *The dashboard pairs the Smart AI Storage Insight card — a natural-language read on what is taking up space and what to do about it — with file type and storage usage charts.*
+
+#### My Drive (Dark Mode)
+![My Drive in dark mode](static/images/Files_dark.png)
+
+> *The vault in dark mode, with Ask SkyVault AI available from the sidebar.*
 
 ---
 

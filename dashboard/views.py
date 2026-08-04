@@ -1,24 +1,27 @@
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum
 from django.http import JsonResponse
 from django.shortcuts import render
-from vault.models import File
-from django.db.models import Count, Sum
 from django.utils import timezone
-from datetime import timedelta
+
+from ai_features.services.insights import generate_storage_insight
+from vault.models import File
+
 
 # Render the dashboard page
 def dashboard_view(request):
     return render(request, 'dashboard/dashboard.html')
 
+
 # View for file type distribution
 def file_type_distribution(request):
-    # Calculate counts for each file type based on the extension or file categories
     file_type_counts = (
-        File.objects.filter(trashed=False, user=request.user)  # Filter by the current user
+        File.objects.filter(trashed=False, user=request.user)
         .values('uploaded_file')
         .annotate(count=Count('id'))
     )
     
-    # Categorize file types into "Documents", "Images", etc., based on file extensions
     type_counts = {
         'Documents': 0,
         'Images': 0,
@@ -41,46 +44,39 @@ def file_type_distribution(request):
         else:
             type_counts['Others'] += count
 
-    # Prepare data for JSON response
     data = [{'file_type': k, 'count': v} for k, v in type_counts.items()]
     return JsonResponse(data, safe=False)
 
 
 # View for storage usage over time
 def storage_usage_over_time(request):
-    # Define storage quota in bytes (100 MB)
     storage_quota = 100 * 1024 * 1024  # 100 MB in bytes
 
-    # Calculate cumulative storage usage grouped by day over the last 30 days
     end_date = timezone.now()
     start_date = end_date - timedelta(days=30)
 
     data = (
-        File.objects.filter(created_at__range=[start_date, end_date], trashed=False, user=request.user)  # Filter by the current user
+        File.objects.filter(created_at__range=[start_date, end_date], trashed=False, user=request.user)
         .extra({'day': "date(created_at)"})
         .values('day')
         .annotate(total_size=Sum('size'))
         .order_by('day')
     )
 
-    # Calculate cumulative usage
     cumulative_usage = 0
     usage_data = []
     for entry in data:
-        cumulative_usage += entry['total_size']  # Accumulate storage usage over time
+        cumulative_usage += entry['total_size']
         usage_data.append({
             'day': entry['day'],
             'cumulative_size': cumulative_usage
         })
 
-    # Return storage usage data and storage quota
     return JsonResponse({
         'usage_data': usage_data,
         'storage_quota': storage_quota
     }, safe=False)
 
-
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def ai_insight(request):
@@ -89,7 +85,6 @@ def ai_insight(request):
     Returns a cached or freshly-generated Claude storage insight for the current user.
     Accepts ?refresh=1 to force regeneration.
     """
-    from ai_features.services.insights import generate_storage_insight
     force = request.GET.get("refresh", "0") == "1"
     result = generate_storage_insight(request.user, force_refresh=force)
     return JsonResponse({
@@ -98,4 +93,3 @@ def ai_insight(request):
         "stats": result["stats"],
         "from_cache": result["from_cache"],
     })
-

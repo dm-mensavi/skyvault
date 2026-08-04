@@ -16,69 +16,76 @@ def chunk_text(
     """
     Semantic Document Chunking Strategy:
     1. Primary split on double-newline paragraph boundaries (\\n\\n) to preserve narrative context.
-    2. Enforces max_chars threshold per chunk with sliding overlap.
-    3. Merges tiny trailing fragments (< 50 chars) to prevent vector noise.
-
-    Why this strategy over fixed-size character splitting:
-    Fixed-size naive splitting breaks sentences and code blocks in half, destroying semantically
-    rich context needed for high-precision RAG vector retrieval. Paragraph splitting keeps
-    coherent thoughts intact while overlap preserves boundary context.
+    2. Sub-splits overlong paragraphs on sentence boundaries.
+    3. Enforces max_chars threshold per chunk with sliding overlap.
+    4. Merges tiny trailing fragments (< 50 chars) without violating max_chars.
     """
     if not text or not text.strip():
         return []
 
-    # Clean multi-line whitespace
     clean = text.strip().replace("\r\n", "\n")
     paragraphs = [p.strip() for p in clean.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return []
 
+    # Step 1: Normalize paragraphs (sub-split any paragraph exceeding max_chars)
+    normalized_paragraphs = []
+    for p in paragraphs:
+        if len(p) > max_chars:
+            sentences = re.split(r"(?<=[.!?])\s+", p)
+            current_s = ""
+            for s in sentences:
+                if len(current_s) + len(s) + 1 <= max_chars:
+                    current_s = f"{current_s} {s}".strip() if current_s else s
+                else:
+                    if current_s:
+                        normalized_paragraphs.append(current_s)
+                    while len(s) > max_chars:
+                        normalized_paragraphs.append(s[:max_chars])
+                        s = s[max_chars:]
+                    current_s = s
+            if current_s:
+                normalized_paragraphs.append(current_s)
+        else:
+            normalized_paragraphs.append(p)
+
+    # Step 2: Assemble chunks from normalized paragraphs with overlap
     raw_chunks = []
     current_chunk = ""
 
-    for paragraph in paragraphs:
-        if len(current_chunk) + len(paragraph) + 2 <= max_chars:
-            current_chunk = f"{current_chunk}\n\n{paragraph}".strip() if current_chunk else paragraph
+    for p in normalized_paragraphs:
+        if not current_chunk:
+            current_chunk = p
+        elif len(current_chunk) + len(p) + 2 <= max_chars:
+            current_chunk = f"{current_chunk}\n\n{p}"
         else:
-            if current_chunk:
-                raw_chunks.append(current_chunk)
-
-            # If a single paragraph is longer than max_chars, split on single newline or sentences
-            if len(paragraph) > max_chars:
-                sub_parts = re.split(r"(?<=[.!?])\s+", paragraph)
-                sub_chunk = ""
-                for part in sub_parts:
-                    if len(sub_chunk) + len(part) + 1 <= max_chars:
-                        sub_chunk = f"{sub_chunk} {part}".strip() if sub_chunk else part
-                    else:
-                        if sub_chunk:
-                            raw_chunks.append(sub_chunk)
-                        # Sliding overlap step
-                        overlap = sub_chunk[-overlap_chars:] if len(sub_chunk) >= overlap_chars else sub_chunk
-                        sub_chunk = f"{overlap} {part}".strip() if overlap else part
-                if sub_chunk:
-                    current_chunk = sub_chunk
+            raw_chunks.append(current_chunk)
+            if overlap_chars > 0 and len(current_chunk) > overlap_chars:
+                overlap = current_chunk[-overlap_chars:]
+                candidate = f"{overlap}\n\n{p}"
+                if len(candidate) <= max_chars:
+                    current_chunk = candidate
+                else:
+                    current_chunk = p
             else:
-                # Include sliding overlap from previous chunk
-                overlap = current_chunk[-overlap_chars:] if len(current_chunk) >= overlap_chars else current_chunk
-                current_chunk = f"{overlap}\n\n{paragraph}".strip() if overlap else paragraph
+                current_chunk = p
 
     if current_chunk:
         raw_chunks.append(current_chunk)
 
-    # Post-process: merge tiny fragments (< MIN_CHUNK_CHARS) into preceding chunk
+    # Step 3: Post-process merge tiny fragments without exceeding max_chars
     final_chunks = []
     for chunk in raw_chunks:
         chunk_str = chunk.strip()
         if not chunk_str:
             continue
-        if final_chunks and len(chunk_str) < MIN_CHUNK_CHARS:
+        if final_chunks and len(chunk_str) < MIN_CHUNK_CHARS and (len(final_chunks[-1]) + len(chunk_str) + 2 <= max_chars):
             final_chunks[-1] += f"\n\n{chunk_str}"
         else:
             final_chunks.append(chunk_str)
 
-    # Format structured dictionary response
     results = []
     for idx, content in enumerate(final_chunks):
-        # Approximate token count (1 token ≈ 4 chars)
         approx_tokens = max(1, len(content) // 4)
         results.append({
             "chunk_index": idx,

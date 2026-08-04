@@ -1,15 +1,18 @@
-from django.http import FileResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from .models import File, Folder
-from .forms import *
-from django.http import JsonResponse
-from django.core.files.base import ContentFile
 import json
 import logging
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
+from django.http import FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
+from ai_features.services.search import search_files
+from .forms import FileUploadForm, FolderForm
+from .models import File, Folder
 
 logger = logging.getLogger(__name__)
+
 
 
 # views.py
@@ -175,8 +178,6 @@ def view_folder(request, folder_id):
         'subfolders': subfolders,
         'files': files,
     })
-
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 
 @login_required
@@ -427,7 +428,6 @@ def search_view(request):
     filename_results = File.objects.filter(user=request.user, name__icontains=query, trashed=False)
 
     # 2. Semantic vector match (Phase 2)
-    from ai_features.services.search import search_files
     semantic_results = search_files(request.user, query, top_k=10)
 
     return render(request, 'vault/search.html', {

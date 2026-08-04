@@ -1,9 +1,9 @@
-from django.contrib.auth.decorators import login_required
-from .models import UserProfile
+from settings.models import UserProfile
+
 
 def storage_info(request):
     """
-    Injects storage information globally into all templates.
+    Injects storage information globally into templates.
     """
     if request.user.is_authenticated:
         try:

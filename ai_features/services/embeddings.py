@@ -7,13 +7,18 @@ logger = logging.getLogger(__name__)
 def get_openai_client():
     """
     Returns an instance of OpenAI client if API key is configured.
+    Supports custom base_url endpoints (e.g. AgentRouter/OneAPI proxies).
     """
     api_key = getattr(settings, "OPENAI_API_KEY", "")
     if not api_key:
         return None
+    base_url = getattr(settings, "OPENAI_BASE_URL", "")
     try:
         import openai
-        return openai.OpenAI(api_key=api_key)
+        kwargs = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        return openai.OpenAI(**kwargs)
     except Exception as e:
         logger.error(f"Failed to initialize OpenAI client: {e}")
         return None

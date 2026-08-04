@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from ai_features.services.search import search_chunks
-from ai_features.services.claude import get_anthropic_client
+from ai_features.services.claude import generate_text
 
 logger = logging.getLogger(__name__)
 
@@ -66,23 +66,14 @@ def ask_vault(request):
     full_context = "\n\n---\n\n".join(context_blocks)
     user_prompt = f"Document Excerpts:\n{full_context}\n\nUser Question: {query}"
 
-    # 3. Call Claude for answer synthesis
-    client = get_anthropic_client()
-    if not client:
-        # Fallback if API key missing
-        return JsonResponse({
-            "answer": f"Found {len(sources)} relevant document(s), but Claude API key is not configured to synthesize an answer.",
-            "sources": sources
-        })
-
+    # 3. Synthesize the answer (primary model, with fallback)
     try:
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1000,
-            system=RAG_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}]
-        )
-        answer = response.content[0].text if response.content else "No response generated."
+        answer = generate_text(RAG_SYSTEM_PROMPT, user_prompt, max_tokens=1000)
+        if not answer:
+            return JsonResponse({
+                "answer": f"Found {len(sources)} relevant document(s), but no generation model is configured to synthesize an answer.",
+                "sources": sources
+            })
         return JsonResponse({
             "answer": answer,
             "sources": sources
