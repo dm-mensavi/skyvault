@@ -90,37 +90,6 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full AI implementation plan.
 
 ---
 
-## 🖼️ **Screenshots**
-
-Take a look at some screenshots of SkyVault in action:
-
-### 1️⃣ **Home Screen**
-![Home](static/images/Home.png)
-
-> *The main interface where you can see your files and folders.*
-
-### 2️⃣ **Dashboard**
-![Dashboard](static/images/Dashboard.png)
-
-> *Get an overview of your storage usage and recent activity.*
-
-### 3️⃣ **Context Menu**
-![Context Menu](static/images/Context-menu.png)
-
-> *Right-click to see various actions you can perform on files and folders.*
-
-### 4️⃣ **Trash**
-![Trash](static/images/Trash.png)
-
-> *Deleted items are stored here, allowing you to restore or permanently delete them.*
-
-### 5️⃣ **Info Panel**
-![Info](static/images/Info.png)
-
-> *Access detailed information and usage statistics for your account.*
-
----
-
 ## AI Features 🧠
 
 SkyVault integrates AI for smart file management. Upload a document and receive auto-generated tags, summaries, and folder suggestions. Ask natural-language questions about your files with RAG-powered search.
