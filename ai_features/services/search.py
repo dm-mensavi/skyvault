@@ -6,10 +6,25 @@ from ai_features.services.embeddings import embed_text
 logger = logging.getLogger(__name__)
 
 
+class RetrievalUnavailable(Exception):
+    """
+    Raised when semantic search could not run at all — the embedding model failed
+    to load, or the pgvector query itself errored (e.g. a dimension mismatch
+    between the model and the DocumentChunk column).
+
+    Distinct from an empty result list, which means retrieval worked and simply
+    found nothing. Callers should surface these differently: "search is broken"
+    is actionable, "no matching documents" is not.
+    """
+
+
 def search_chunks(user, query: str, top_k: int = 5) -> list:
     """
     Performs pgvector cosine distance similarity search across DocumentChunks.
     Strictly scoped per user: all queries filter by file__user=user and file__trashed=False.
+
+    Returns [] when nothing matches. Raises RetrievalUnavailable when the search
+    could not be performed at all.
     """
     if not query or not query.strip():
         return []
@@ -17,7 +32,9 @@ def search_chunks(user, query: str, top_k: int = 5) -> list:
     query_vector = embed_text(query)
     if not query_vector:
         logger.warning("Could not generate query embedding vector for search.")
-        return []
+        raise RetrievalUnavailable(
+            "The embedding model is unavailable, so semantic search could not run."
+        )
 
     try:
         chunks = (
@@ -37,13 +54,15 @@ def search_chunks(user, query: str, top_k: int = 5) -> list:
         return results
     except Exception as e:
         logger.error(f"Error performing pgvector search_chunks: {e}", exc_info=True)
-        return []
+        raise RetrievalUnavailable(f"The vector search query failed: {e}") from e
 
 
 def search_files(user, query: str, top_k: int = 10) -> list:
     """
     Deduplicates chunk similarity results to return file-level search matches.
     Returns list of dicts: [{"file": File, "score": float, "snippet": str}]
+
+    Propagates RetrievalUnavailable — see search_chunks.
     """
     matching_chunks = search_chunks(user, query, top_k=top_k * 2)
     if not matching_chunks:

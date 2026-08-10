@@ -27,7 +27,7 @@ graph TD
 
             subgraph Services["services/"]
                 CLAUDE["claude.py (Anthropic client)"]
-                EMBED["embeddings.py (OpenAI client)"]
+                EMBED["embeddings.py (sentence-transformers, local)"]
                 SEARCH["search.py (pgvector retrieval)"]
                 INSIGHT["insights.py (storage stats + Claude)"]
             end
@@ -63,7 +63,6 @@ graph TD
 
     subgraph External["External APIs"]
         ANTH["Anthropic Claude"]
-        OPENAI["OpenAI Embeddings"]
     end
 
     UI --> VF
@@ -77,7 +76,6 @@ graph TD
     FA --> DC
     EMBED --> DC
     DC --> PGV
-    EMBED --> OPENAI
     CLAUDE --> ANTH
     SEARCH --> PGV
     SEARCH --> EMBED
@@ -111,10 +109,10 @@ graph TD
    - `tags`: 3-7 lowercase tags
    - `suggested_folder`: a folder name
 
-5. **Chunking & Embedding** (Phase 2): The full extracted text is chunked using `chunking.py` (paragraph-based split with overlap), then each chunk is embedded via OpenAI `text-embedding-3-small` (1536 dims) and stored as `DocumentChunk` records with pgvector `VectorField`.
+5. **Chunking & Embedding** (Phase 2): The full extracted text is chunked using `chunking.py` (paragraph-based split with overlap), then each chunk is embedded locally via sentence-transformers `all-MiniLM-L6-v2` (384 dims) and stored as `DocumentChunk` records with pgvector `VectorField`.
 
 6. **Semantic Search**: When a user submits a search query:
-   - The query is embedded via OpenAI
+   - The query is embedded locally via sentence-transformers
    - pgvector performs cosine distance search over `DocumentChunk.embedding`
    - Results are scoped to `file__user=request.user` and `file__trashed=False`
    - Top-k chunks are deduplicated back to files and returned with relevance scores
@@ -147,8 +145,8 @@ Fixed-size splits (e.g., every 500 characters) break mid-sentence and mid-code-b
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Embedding model | `text-embedding-3-small` | Cheapest OpenAI embedding model; 1536 dimensions; well-documented |
-| Dimensions | 1536 | Matches the model default; no compression needed |
+| Embedding model | `all-MiniLM-L6-v2` | Runs locally via sentence-transformers; free, no API key, no per-query cost |
+| Dimensions | 384 | Matches the model default; smaller index than 1536-dim alternatives |
 | Vector store | pgvector (PostgreSQL) | Already on the same database; no additional infrastructure |
 | Index type | HNSW (Cosine) | Best recall/speed tradeoff for pgvector; supported natively |
 

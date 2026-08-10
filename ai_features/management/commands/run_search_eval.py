@@ -1,9 +1,9 @@
 import json
 import os
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.conf import settings
-from ai_features.services.search import search_files
+from ai_features.services.search import search_files, RetrievalUnavailable
 
 
 class Command(BaseCommand):
@@ -36,7 +36,16 @@ class Command(BaseCommand):
             k = q.get("k", 5)
             expected_kw = q.get("expected_keywords", [])
 
-            results = search_files(user, query, top_k=k)
+            try:
+                results = search_files(user, query, top_k=k)
+            except RetrievalUnavailable as e:
+                # Abort rather than write a report full of 0.0 recall, which would
+                # look like a genuine retrieval-quality result.
+                raise CommandError(
+                    f"Retrieval unavailable, aborting eval: {e} "
+                    "Run 'python manage.py ai_smoke_test' to diagnose. "
+                    "docs/EVAL_RESULTS.md was left unchanged."
+                ) from e
             retrieved_names = [r["file"].name.lower() for r in results]
 
             # Calculate hit recall
@@ -65,7 +74,7 @@ class Command(BaseCommand):
         doc_content = f"# SkyVault AI — Retrieval & RAG Benchmark Results\n\n" \
                       f"**Evaluated on:** 2026-07-30  \n" \
                       f"**Vector Store:** PostgreSQL `pgvector` with HNSW Cosine Index  \n" \
-                      f"**Embedding Model:** `text-embedding-3-small` (1536 dimensions)  \n" \
+                      f"**Embedding Model:** `{settings.AI_EMBEDDING_MODEL}` ({settings.AI_EMBEDDING_DIMENSIONS} dimensions)  \n" \
                       f"**Overall Mean Recall@5:** **{avg_recall}**\n\n" \
                       f"## Detailed Query Evaluation Table\n\n" \
                       f"| Test Query | Recall@5 | Top Retrieved Files |\n" \

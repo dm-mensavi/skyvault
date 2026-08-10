@@ -26,11 +26,14 @@ ANALYSIS_SCHEMA = '{"summary": str, "tags": list[str], "suggested_folder": str}'
 
 def analyze_file(file_id: int):
     """
-    Background task: extract text from an uploaded file, ask Claude for a
-    structured summary + tags + suggested folder, and persist the result.
+    Background task: extract text from an uploaded file, chunk & embed it for
+    RAG search, then ask Claude for a structured summary + tags + suggested
+    folder, and persist the result.
 
     Status lifecycle: PENDING -> PROCESSING -> DONE | SKIPPED | FAILED.
     Failures never raise past this function so the upload itself is unaffected.
+    Embeddings are indexed before the Claude call, so a generation failure
+    still leaves the file searchable.
     """
     analysis = None
     try:
@@ -64,7 +67,14 @@ def analyze_file(file_id: int):
 
         truncated = text[:MAX_TEXT_CHARS]
 
-        # 2. Ask Claude for structured JSON
+        # 2. Persist the extracted text immediately, then chunk & embed for RAG.
+        # Both are independent of Claude: a generation failure below must not
+        # cost us the embeddings, and reindex_embeddings relies on this text.
+        analysis.extracted_text = text
+        analysis.save(update_fields=["extracted_text", "updated_at"])
+        _index_vector_chunks(file_obj, analysis, text)
+
+        # 3. Ask Claude for structured JSON
         result = generate_json(
             system_prompt=ANALYSIS_SYSTEM_PROMPT,
             user_content=truncated,
@@ -74,7 +84,7 @@ def analyze_file(file_id: int):
         if not result:
             raise ValueError("Claude returned an empty or invalid response.")
 
-        # 3. Persist analysis results
+        # 4. Persist analysis results
         tags = result.get("tags", [])
         if not isinstance(tags, list):
             tags = []
@@ -86,9 +96,6 @@ def analyze_file(file_id: int):
         analysis.error_message = ""
         analysis.status = FileAnalysis.Status.DONE
         analysis.save()
-
-        # 4. Chunk & embed with local sentence-transformers for RAG search
-        _index_vector_chunks(file_obj, analysis, text)
 
         logger.info(
             f"analyze_file done for file_id={file_id}: "

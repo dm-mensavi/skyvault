@@ -166,8 +166,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # AI Features Configuration (Phase 0+)
 # Generation is routed through an Anthropic-compatible gateway (AgentRouter)
 # rather than api.anthropic.com. Clear ANTHROPIC_BASE_URL to talk to Anthropic
-# directly. NOTE: the gateway only exposes /v1/messages — it has no
-# OpenAI-compatible surface, so embeddings must use a real OpenAI key.
+# directly. NOTE: the gateway only exposes /v1/messages and has no embeddings
+# endpoint — which is why embeddings run locally (see AI_EMBEDDING_MODEL below).
 
 # Primary generation — Anthropic-compatible endpoint
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN", "")

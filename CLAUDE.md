@@ -10,7 +10,7 @@ SkyVault is a Django 5.1 personal file vault with AI-powered features: auto-tagg
 - Django 5.1 with PostgreSQL 16 + pgvector extension
 - django-q2 for async background tasks (ORM broker, no Redis)
 - Anthropic Claude for text generation (analysis, summarization, RAG)
-- OpenAI embeddings (`text-embedding-3-small`, 1536 dims) for semantic search
+- Local sentence-transformers embeddings (`all-MiniLM-L6-v2`, 384 dims) for semantic search — no API key required
 - Server-rendered templates (no DRF/SPA)
 
 ## Development Commands
@@ -86,11 +86,17 @@ Tests use Django's `TestCase`. Key test files:
 ### AI Feature Commands
 
 ```bash
-# Verify API keys and test Claude + OpenAI connectivity
+# Verify API keys and test Claude generation + local embedding connectivity
 python manage.py ai_smoke_test
 
 # Run semantic search evaluation benchmark (Recall@K)
 python manage.py run_search_eval
+
+# Rebuild vector chunks from already-extracted text (no re-extraction, no Claude calls).
+# Needed after an embedding-model change, since analyze_file only runs on upload.
+python manage.py reindex_embeddings              # all files
+python manage.py reindex_embeddings --user alice # scope to one user
+python manage.py reindex_embeddings --force      # redo files that already have chunks
 
 # Seed demo vault with sample files for testing
 python manage.py seed_demo_vault
@@ -116,7 +122,7 @@ python manage.py seed_demo_vault
    - `plaintext.py` handles `.txt`, `.md`, `.json`, `.py`, `.js`, `.html`, `.css`, `.csv`, `.xml`
 4. **Analyze** → Truncated text (8000 chars) sent to Claude → returns JSON with `summary`, `tags`, `suggested_folder`
 5. **Chunk** → `ai_features/chunking.py` splits full text using paragraph boundaries with 200-char overlap, max 2000 chars/chunk
-6. **Embed** → Each chunk embedded via OpenAI → stored in `DocumentChunk` with pgvector `VectorField`
+6. **Embed** → Each chunk embedded locally via sentence-transformers → stored in `DocumentChunk` with pgvector `VectorField`
 7. **Search** → User query → embedded → cosine distance search via pgvector HNSW index → deduplicated to files
 8. **RAG** → Retrieve top-5 chunks → build context with citations → send to Claude → generate grounded answer
 
@@ -155,8 +161,9 @@ ANTHROPIC_AUTH_TOKEN=sk-...
 ANTHROPIC_BASE_URL=https://agentrouter.org  # or empty for api.anthropic.com
 ANTHROPIC_MODEL=claude-opus-5
 
-# Embeddings (requires real OpenAI key)
-OPENAI_API_KEY=sk-...
+# Embeddings — local sentence-transformers, no API key needed.
+# Defaults to all-MiniLM-L6-v2 (384 dims); override only to change model.
+AI_EMBEDDING_MODEL=all-MiniLM-L6-v2
 
 # Optional fallback generation
 AI_FALLBACK_MODEL=gpt-5.6-sol
@@ -178,7 +185,7 @@ DB_PORT=5432
 - `skyvault/settings.py` - Django settings, AI config loaded from env vars
 - `ai_features/tasks.py` - Background task entry point (`analyze_file`)
 - `ai_features/services/claude.py` - Generation client with fallback
-- `ai_features/services/embeddings.py` - OpenAI embedding client
+- `ai_features/services/embeddings.py` - Local sentence-transformers embedding client
 - `ai_features/services/search.py` - Semantic search over pgvector
 - `ai_features/services/insights.py` - Dashboard AI insights
 - `ai_features/models.py` - `FileAnalysis`, `DocumentChunk`, `StorageInsight`

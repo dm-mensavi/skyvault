@@ -7,7 +7,7 @@ from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from ai_features.services.search import search_files
+from ai_features.services.search import search_files, RetrievalUnavailable
 from .forms import FileUploadForm, FolderForm
 from .models import File, Folder
 
@@ -439,12 +439,19 @@ def search_view(request):
     # 1. Filename match
     filename_results = File.objects.filter(user=request.user, name__icontains=query, trashed=False)
 
-    # 2. Semantic vector match (Phase 2)
-    semantic_results = search_files(request.user, query, top_k=10)
+    # 2. Semantic vector match (Phase 2). Filename results still render if the
+    # vector backend is down.
+    try:
+        semantic_results = search_files(request.user, query, top_k=10)
+        semantic_error = None
+    except RetrievalUnavailable:
+        semantic_results = []
+        semantic_error = "Semantic search is unavailable — the embedding model failed to load."
 
     return render(request, 'vault/search.html', {
         'results': filename_results,
         'semantic_results': semantic_results,
+        'semantic_error': semantic_error,
         'query': query
     })
 

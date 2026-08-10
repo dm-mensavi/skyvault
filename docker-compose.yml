@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       db-skyvault:
         condition: service_healthy
@@ -24,9 +25,7 @@ services:
       - AI_FALLBACK_MODEL=${AI_FALLBACK_MODEL:-}
       - AI_FALLBACK_API_KEY=${AI_FALLBACK_API_KEY:-}
       - AI_FALLBACK_BASE_URL=${AI_FALLBACK_BASE_URL:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
-      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-text-embedding-3-small}
+      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
 
   qcluster:
     build: .
@@ -35,6 +34,7 @@ services:
     command: python manage.py qcluster
     volumes:
       - .:/app
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       web-skyvault:
         condition: service_started
@@ -55,9 +55,7 @@ services:
       - AI_FALLBACK_MODEL=${AI_FALLBACK_MODEL:-}
       - AI_FALLBACK_API_KEY=${AI_FALLBACK_API_KEY:-}
       - AI_FALLBACK_BASE_URL=${AI_FALLBACK_BASE_URL:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
-      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-text-embedding-3-small}
+      - AI_EMBEDDING_MODEL=${AI_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
 
 
   db-skyvault:
@@ -77,3 +75,4 @@ services:
 
 volumes:
   postgres_data:
+  hf_cache:

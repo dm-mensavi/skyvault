@@ -234,6 +234,11 @@ const SkyVault = {
     const chatBody = document.getElementById("rag-chat-body");
     if (!input || !chatBody) return;
 
+    // One question at a time. Without this, a second submit during the (often
+    // multi-second) first request leaves an orphaned loading bubble that no
+    // response ever clears.
+    if (this._ragInFlight) return;
+
     const query = input.value.trim();
     if (!query) return;
 
@@ -247,6 +252,8 @@ const SkyVault = {
     input.value = "";
     chatBody.scrollTop = chatBody.scrollHeight;
 
+    this._setRagBusy(true);
+
     // Append loading spinner placeholder
     const loadingMsg = document.createElement("div");
     loadingMsg.className = "rag-message ai-msg loading-msg";
@@ -255,19 +262,22 @@ const SkyVault = {
     chatBody.appendChild(loadingMsg);
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
-
     fetch("/vault/ask/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken,
+        "X-CSRFToken": this.getCsrfToken(),
       },
       body: JSON.stringify({ query: query }),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        chatBody.removeChild(loadingMsg);
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        // Non-2xx (e.g. the 503 retrieval-unavailable path) carries an `error`
+        // string, not an answer — render it as an error, not as a real reply.
+        if (!ok || data.error) {
+          this._appendRagError(chatBody, data.error || "Failed to get AI answer. Please try again.");
+          return;
+        }
 
         const aiMsg = document.createElement("div");
         aiMsg.className = "rag-message ai-msg";
@@ -295,14 +305,37 @@ const SkyVault = {
       })
       .catch((err) => {
         console.error("RAG Error:", err);
-        chatBody.removeChild(loadingMsg);
-        const errorMsg = document.createElement("div");
-        errorMsg.className = "rag-message ai-msg error-msg";
-        errorMsg.style.cssText = "display:flex; gap:12px; background:#fce8e6; padding:12px 16px; border-radius:8px; color:#c5221f;";
-        errorMsg.innerHTML = `<span class="material-icons">error_outline</span><p style="margin:0; font-size:14px;">Failed to get AI answer. Please try again.</p>`;
-        chatBody.appendChild(errorMsg);
+        this._appendRagError(chatBody, "Failed to get AI answer. Please try again.");
+      })
+      .finally(() => {
+        // Sweep by class, not by captured node: idempotent, clears any orphan
+        // left by an earlier request, and .remove() never throws.
+        chatBody.querySelectorAll(".loading-msg").forEach((n) => n.remove());
         chatBody.scrollTop = chatBody.scrollHeight;
+        this._setRagBusy(false);
       });
+  },
+
+  _setRagBusy(busy) {
+    this._ragInFlight = busy;
+    const input = document.getElementById("rag-input");
+    const btn = document.querySelector('#rag-chat-modal .rag-chat-input-row button');
+    if (input) input.disabled = busy;
+    if (btn) {
+      btn.disabled = busy;
+      btn.style.opacity = busy ? "0.6" : "";
+      btn.style.cursor = busy ? "not-allowed" : "";
+    }
+    if (!busy && input) input.focus();
+  },
+
+  _appendRagError(chatBody, message) {
+    const errorMsg = document.createElement("div");
+    errorMsg.className = "rag-message ai-msg error-msg";
+    errorMsg.style.cssText = "display:flex; gap:12px; background:#fce8e6; padding:12px 16px; border-radius:8px; color:#c5221f;";
+    errorMsg.innerHTML = `<span class="material-icons">error_outline</span><p style="margin:0; font-size:14px;">${this.escapeHtml(message)}</p>`;
+    chatBody.appendChild(errorMsg);
+    chatBody.scrollTop = chatBody.scrollHeight;
   },
 
 

@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from ai_features.services.search import search_chunks
+from ai_features.services.search import search_chunks, RetrievalUnavailable
 from ai_features.services.claude import generate_text
 
 logger = logging.getLogger(__name__)
@@ -46,8 +46,21 @@ def ask_vault(request):
     if not query:
         return JsonResponse({"error": "Query cannot be empty."}, status=400)
 
-    # 1. Retrieve top relevant chunks for current user
-    chunks = search_chunks(request.user, query, top_k=5)
+    # 1. Retrieve top relevant chunks for current user.
+    # A retrieval failure is reported as such rather than silently degrading to
+    # a generic chat answer, which made a broken index look like an empty vault.
+    try:
+        chunks = search_chunks(request.user, query, top_k=5)
+    except RetrievalUnavailable as e:
+        logger.error(f"Semantic retrieval unavailable for ask_vault: {e}")
+        return JsonResponse({
+            "error": (
+                "Document search is currently unavailable, so I can't look through your "
+                "files. This usually means the embedding model failed to load. "
+                "Run 'python manage.py ai_smoke_test' to diagnose."
+            ),
+            "retrieval_unavailable": True,
+        }, status=503)
 
     sources = []
     seen_files = set()
@@ -89,9 +102,11 @@ def ask_vault(request):
             "sources": sources
         })
     except Exception as e:
+        # The detail goes to the log, not the browser: the client renders `error`
+        # verbatim in the chat, and a raw exception string leaks internals.
         logger.error(f"Error in ask_vault RAG call: {e}", exc_info=True)
         return JsonResponse({
             "answer": "An error occurred while generating the answer. Please try again.",
             "sources": sources,
-            "error": str(e)
+            "error": "An error occurred while generating the answer. Please try again.",
         }, status=500)

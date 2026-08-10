@@ -105,7 +105,7 @@ SkyVault integrates AI for smart file management. Upload a document and receive 
 
 1. Upload a supported file (`.pdf`, `.txt`, `.md`)
 2. A background task extracts text and sends it to Claude for analysis
-3. Text is chunked into paragraphs, embedded via OpenAI, and stored in pgvector
+3. Text is chunked into paragraphs, embedded locally via sentence-transformers, and stored in pgvector
 4. Semantic search and RAG queries retrieve relevant chunks and generate answers using Claude
 
 ### Required API Keys
@@ -120,9 +120,7 @@ ANTHROPIC_AUTH_TOKEN=sk-...
 ANTHROPIC_BASE_URL=https://agentrouter.org
 ANTHROPIC_MODEL=claude-opus-5
 
-# Embeddings — requires a real OpenAI key.
-# Gateways generally do not serve /v1/embeddings.
-OPENAI_API_KEY=sk-...
+# Embeddings run locally via sentence-transformers — no API key required.
 ```
 
 Optional overrides:
@@ -134,9 +132,9 @@ AI_FALLBACK_MODEL=gpt-5.6-sol
 AI_FALLBACK_API_KEY=sk-...
 AI_FALLBACK_BASE_URL=https://agentrouter.org
 
-OPENAI_BASE_URL=
-AI_EMBEDDING_MODEL=text-embedding-3-small
-AI_EMBEDDING_DIMENSIONS=1536
+# Embedding model — any sentence-transformers model id.
+# Must match AI_EMBEDDING_DIMENSIONS and the DocumentChunk vector column.
+AI_EMBEDDING_MODEL=all-MiniLM-L6-v2
 ```
 
 Verify your configuration with:
