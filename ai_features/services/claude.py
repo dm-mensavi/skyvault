@@ -123,21 +123,18 @@ def _generate_text_fallback(system_prompt: str, user_content: str, max_tokens: i
 def generate_json(system_prompt: str, user_content: str, schema_description: str = "") -> dict:
     """
     Queries the configured generation model and returns parsed JSON.
-    Includes 1 retry attempt on JSON parse failure.
+    Returns {} on parse failure or empty response.
     """
     full_system = f"{system_prompt}\nRespond strictly with valid JSON. No conversational text."
     if schema_description:
         full_system += f"\nExpected JSON Schema: {schema_description}"
 
-    for attempt in range(2):
-        raw_text = generate_text(full_system, user_content)
-        if not raw_text:
-            logger.error("Generation returned no text; cannot parse JSON.")
-            return {}
-        try:
-            return json.loads(clean_json_string(raw_text))
-        except json.JSONDecodeError as e:
-            logger.warning(f"JSON parse error on attempt {attempt + 1}: {e}")
-
-    logger.error("Failed to parse JSON response after 2 attempts.")
-    return {}
+    raw_text = generate_text(full_system, user_content)
+    if not raw_text:
+        logger.error("Generation returned no text; cannot parse JSON.")
+        return {}
+    try:
+        return json.loads(clean_json_string(raw_text))
+    except json.JSONDecodeError as e:
+        logger.warning(f"JSON parse error: {e}. Raw: {raw_text[:200]}")
+        return {}

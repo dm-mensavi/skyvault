@@ -18,8 +18,12 @@ function wait_for_db() {
 wait_for_db
 
 # Run migrations
-echo "Running migrations..."
-python manage.py migrate
+if [ "$SKIP_MIGRATIONS" != "1" ] && [ "$SKIP_MIGRATIONS" != "true" ]; then
+  echo "Running migrations..."
+  python manage.py migrate
+else
+  echo "Skipping migrations (SKIP_MIGRATIONS set)..."
+fi
 
 # Start the Django server
 echo "Starting server..."

@@ -106,6 +106,18 @@ def upload_file(request):
 
     user_profile = request.user.userprofile
 
+    # Exclude audio and video files
+    AUDIO_EXTENSIONS = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "wma", "m4r", "aiff", "opus", "mid", "midi"}
+    VIDEO_EXTENSIONS = {"mp4", "avi", "mov", "mkv", "webm", "flv", "wmv", "m4v", "3gp", "ogv"}
+    DISALLOWED_EXTENSIONS = AUDIO_EXTENSIONS | VIDEO_EXTENSIONS
+
+    file_extension = uploaded_file.name.split('.')[-1].lower() if '.' in uploaded_file.name else ''
+    content_type = getattr(uploaded_file, 'content_type', '') or ''
+
+    if file_extension in DISALLOWED_EXTENSIONS or content_type.startswith(('audio/', 'video/')):
+        messages.error(request, "Audio and video files are not allowed.")
+        return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
+
     # Check for file size limits
     if uploaded_file.size > 40 * 1024 * 1024:  # 40 MB limit
         messages.error(request, "File exceeds max size of 40 MB.")

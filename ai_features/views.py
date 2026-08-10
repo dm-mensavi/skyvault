@@ -18,6 +18,12 @@ RAG_SYSTEM_PROMPT = (
     "'I couldn't find relevant documents in your SkyVault to answer this question.'"
 )
 
+GENERAL_SYSTEM_PROMPT = (
+    "You are SkyVault AI, an intelligent personal file assistant.\n"
+    "Answer the user's question directly, concisely, and helpfully (2-3 paragraphs max).\n"
+    "If the user asks about specific personal files or documents that aren't available, mention that you couldn't find relevant documents in their SkyVault."
+)
+
 
 @login_required
 @require_POST
@@ -25,6 +31,7 @@ def ask_vault(request):
     """
     RAG Q&A Endpoint: Retrieves relevant pgvector document chunks for user query,
     constructs context prompt, and generates grounded answer with source file citations.
+    Falls back to direct AI generation for conversational queries when no chunks match.
     """
     query = ""
     if request.content_type == "application/json":
@@ -42,38 +49,41 @@ def ask_vault(request):
     # 1. Retrieve top relevant chunks for current user
     chunks = search_chunks(request.user, query, top_k=5)
 
-    if not chunks:
-        return JsonResponse({
-            "answer": "I couldn't find any relevant documents in your SkyVault to answer this question.",
-            "sources": []
-        })
-
-    # 2. Build grounded context block with source numbers
-    context_blocks = []
     sources = []
     seen_files = set()
 
-    for idx, chunk in enumerate(chunks, 1):
-        context_blocks.append(f"[{idx}] File: {chunk.file.name}\n{chunk.content}")
-        if chunk.file_id not in seen_files:
-            seen_files.add(chunk.file_id)
-            sources.append({
-                "id": chunk.file.id,
-                "name": chunk.file.name,
-                "score": chunk.relevance_score,
-            })
+    if chunks:
+        context_blocks = []
+        for idx, chunk in enumerate(chunks, 1):
+            context_blocks.append(f"[{idx}] File: {chunk.file.name}\n{chunk.content}")
+            if chunk.file_id not in seen_files:
+                seen_files.add(chunk.file_id)
+                sources.append({
+                    "id": chunk.file.id,
+                    "name": chunk.file.name,
+                    "score": chunk.relevance_score,
+                })
+        full_context = "\n\n---\n\n".join(context_blocks)
+        user_prompt = f"Document Excerpts:\n{full_context}\n\nUser Question: {query}"
+        system_prompt = RAG_SYSTEM_PROMPT
+    else:
+        user_prompt = query
+        system_prompt = GENERAL_SYSTEM_PROMPT
 
-    full_context = "\n\n---\n\n".join(context_blocks)
-    user_prompt = f"Document Excerpts:\n{full_context}\n\nUser Question: {query}"
-
-    # 3. Synthesize the answer (primary model, with fallback)
+    # 2. Synthesize the answer (primary model, with fallback)
     try:
-        answer = generate_text(RAG_SYSTEM_PROMPT, user_prompt, max_tokens=1000)
+        answer = generate_text(system_prompt, user_prompt, max_tokens=1000)
         if not answer:
-            return JsonResponse({
-                "answer": f"Found {len(sources)} relevant document(s), but no generation model is configured to synthesize an answer.",
-                "sources": sources
-            })
+            if sources:
+                return JsonResponse({
+                    "answer": f"Found {len(sources)} relevant document(s), but no AI generation model is configured to synthesize an answer. Please set ANTHROPIC_AUTH_TOKEN in your environment.",
+                    "sources": sources
+                })
+            else:
+                return JsonResponse({
+                    "answer": "I couldn't find relevant documents in your SkyVault for this query. (Note: No AI generation model is currently configured to synthesize a general answer).",
+                    "sources": []
+                })
         return JsonResponse({
             "answer": answer,
             "sources": sources

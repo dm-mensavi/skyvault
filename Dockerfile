@@ -7,12 +7,16 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
-# Install PostgreSQL client tools for pg_isready
-RUN apt-get update && apt-get install -y postgresql-client
+# Install system dependencies: PostgreSQL client, Tesseract OCR for image text extraction
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file and install dependencies
 COPY requirements.txt /app/
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
 
 # Copy the application code
 COPY . /app/

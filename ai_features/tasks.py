@@ -7,8 +7,9 @@ from .services.claude import generate_json
 
 logger = logging.getLogger(__name__)
 
-# Truncate extracted text before sending to Claude to stay within token limits (Phase 1).
-MAX_TEXT_CHARS = 8000
+# Truncate extracted text before sending to Claude to stay within token limits.
+# 4000 chars (~1000 tokens) gives Claude enough context while keeping latency low.
+MAX_TEXT_CHARS = 4000
 
 ANALYSIS_SYSTEM_PROMPT = (
     "You analyze documents for a personal file vault. Return ONLY valid JSON with this schema:\n"
@@ -86,7 +87,7 @@ def analyze_file(file_id: int):
         analysis.status = FileAnalysis.Status.DONE
         analysis.save()
 
-        # 4. Phase 2: Chunking & OpenAI Vector Embedding Indexing
+        # 4. Chunk & embed with local sentence-transformers for RAG search
         _index_vector_chunks(file_obj, analysis, text)
 
         logger.info(
@@ -103,8 +104,8 @@ def analyze_file(file_id: int):
 
 def _index_vector_chunks(file_obj: File, analysis: FileAnalysis, text: str):
     """
-    Chunks document text and generates OpenAI 1536-dimensional embeddings,
-    saving DocumentChunk records for pgvector semantic search and RAG.
+    Chunks document text and generates local 384-dim embeddings via sentence-transformers,
+    saving DocumentChunk records for pgvector semantic search and RAG Q&A.
     """
     from .chunking import chunk_text
     from .services.embeddings import embed_texts

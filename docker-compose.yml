@@ -1,6 +1,8 @@
 services:
   web-skyvault:
     build: .
+    image: skyvault:latest
+    pull_policy: build
     ports:
       - "8000:8000"
     volumes:
@@ -28,10 +30,14 @@ services:
 
   qcluster:
     build: .
+    image: skyvault:latest
+    pull_policy: build
     command: python manage.py qcluster
     volumes:
       - .:/app
     depends_on:
+      web-skyvault:
+        condition: service_started
       db-skyvault:
         condition: service_healthy
     environment:
@@ -41,6 +47,7 @@ services:
       - DB_HOST=db-skyvault
       - DB_PORT=5432
       - DJANGO_ENV=docker
+      - SKIP_MIGRATIONS=1
       - SECRET_KEY=${SECRET_KEY}
       - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN}
       - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL}

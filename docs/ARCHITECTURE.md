@@ -95,13 +95,16 @@ graph TD
 
 ## RAG Pipeline Walkthrough
 
-1. **Upload**: User uploads a `.pdf`, `.txt`, or `.md` file. The `File` record is created, and a `post_save` signal fires.
+1. **Upload**: User uploads a `.pdf` file. Non-PDF uploads are rejected. The `File` record is created, and a `post_save` signal fires.
 
 2. **Signal → Task**: The signal enqueues `ai_features.tasks.analyze_file(file_id)` via django-q2 (async background task).
 
-3. **Text Extraction**: `analyze_file` calls `extract_text()` which dispatches to the appropriate extractor:
-   - `pdf.py` uses `pdfplumber` for PDFs
-   - `plaintext.py` uses Python's built-in `open()` with encoding fallbacks for `.txt`, `.md`, `.json`, `.py`, `.js`, `.html`, `.css`, `.csv`, `.xml`
+3. **Text Extraction & Page Sampling**: `analyze_file` calls `extract_text()` which dispatches to the appropriate extractor:
+   - **PDF** (`.pdf`): `pdf.py` via pdfplumber. If the PDF has more than 10 pages, only the first 5 and last 5 pages are extracted to respect token limits.
+   - **Word Documents** (`.docx`, `.doc`): `docx.py` via python-docx; extracts all paragraphs and table cells.
+   - **Images** (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`): `image.py` via pytesseract OCR; enables extraction of text from scanned documents and screenshots.
+   - **Plaintext** (`.txt`, `.md`, `.json`, `.py`, `.js`, `.html`, `.css`, `.csv`, `.xml`): `plaintext.py` with encoding fallbacks (utf-8, latin-1, cp1252).
+   - **Audio / Video**: Blocked at upload (views.py + forms.py) and never reach the extraction layer.
 
 4. **AI Analysis**: The extracted text (truncated to 8000 chars) is sent to Anthropic Claude with a structured JSON prompt. Claude returns:
    - `summary`: 2-3 sentence summary

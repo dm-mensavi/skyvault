@@ -1,0 +1,90 @@
+# AI Performance & Ask SkyVault Fix
+
+## Context
+
+- AI calls route through **AgentRouter** (Anthropic-compatible proxy at `https://agentrouter.org`)
+- **No OpenAI key** — embeddings via OpenAI are completely dead, so semantic search and RAG Q&A are broken
+- The "Ask SkyVault AI" chat modal works UI-wise but the backend returns no results because `embed_text()` always returns `[]`
+- The `analyze_file` background task still tries to index vector chunks via OpenAI — always silently fails
+
+## Root Causes of Slowness & Failures
+
+1. **Dead embedding path** — `embed_texts()` hits OpenAI with no key, logs a warning, and returns `[]`. `_index_vector_chunks` then exits early — no chunks created, so RAG Q&A always hits the empty-chunks path.
+2. **`generate_json` does 2 retries** on every call, even when the model is fine — doubles latency on transient issues.
+3. **`max_tokens=1000`** for the RAG answer is generous but the analysis prompt is fine.
+4. **Search fallback** still tries to embed the query, fails silently, returns no results — chat looks broken.
+5. **Embedding alternative** needed: use the Anthropic-compatible gateway to generate embeddings OR switch to local/free embeddings.
+
+## Solution
+
+### Replace OpenAI embeddings with sentence-transformers (local, free, fast)
+
+Since there is no OpenAI key, replace the OpenAI embedding layer with **`sentence-transformers`** running locally inside the container. This is:
+- **Free** — no API key needed
+- **Fast** — runs in-process, no network round-trip
+- **Good quality** — `all-MiniLM-L6-v2` (384 dims) is widely used for semantic search
+
+> [!IMPORTANT]
+> This requires a migration: `DocumentChunk.embedding` currently uses `VectorField(dimensions=1536)`. We need a new migration to change it to `dimensions=384`. This drops all existing chunk data (re-indexing required for existing files).
+
+### Proposed Changes
+
+---
+
+### Embeddings Layer
+
+#### [MODIFY] [embeddings.py](file:///c:/Programs/Python/skyvault/ai_features/services/embeddings.py)
+- Replace OpenAI client with `sentence-transformers` (`all-MiniLM-L6-v2`)
+- Load model lazily (cached singleton) so first call has minor warm-up, subsequent calls are instant
+- `embed_text(text)` and `embed_texts(texts)` stay identical in signature
+- Returns 384-dim vectors
+
+#### [MODIFY] [requirements.txt](file:///c:/Programs/Python/skyvault/requirements.txt)
+- Remove `openai` (no key available)
+- Add `sentence-transformers`
+
+#### [MODIFY] [settings.py](file:///c:/Programs/Python/skyvault/skyvault/settings.py)
+- Remove `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `AI_EMBEDDING_MODEL`
+- Add `AI_EMBEDDING_DIMENSIONS = 384`
+
+---
+
+### Vector Store Migration
+
+#### [NEW] `ai_features/migrations/0006_resize_embedding_384.py`
+- RunSQL to drop old HNSW index, alter column to `vector(384)`, recreate HNSW index
+
+---
+
+### Claude service efficiency
+
+#### [MODIFY] [claude.py](file:///c:/Programs/Python/skyvault/ai_features/services/claude.py)
+- Remove retry loop in `generate_json` (was doubling latency on bad responses)
+- Keep the fallback model path
+
+---
+
+### tasks.py — remove dead OpenAI path comment + reduce MAX_TEXT_CHARS
+
+#### [MODIFY] [tasks.py](file:///c:/Programs/Python/skyvault/ai_features/tasks.py)
+- Reduce `MAX_TEXT_CHARS` from 8000 → 4000 (faster Claude response, still plenty of context)
+- `_index_vector_chunks` will now succeed since embeddings work
+
+---
+
+### Ask SkyVault Chat — fix by making search work
+
+Once embeddings are fixed, search_chunks will work. The JS and view are already correct. No frontend changes needed.
+
+---
+
+### Dockerfile
+
+#### [MODIFY] [Dockerfile](file:///c:/Programs/Python/skyvault/Dockerfile)
+- The `sentence-transformers` model downloads on first run from HuggingFace — add `TRANSFORMERS_OFFLINE=0` env (or pre-download in build step for faster cold start)
+
+## Verification Plan
+
+1. Build Docker, watch `qcluster` logs — `analyze_file` should complete without embedding errors
+2. Upload a PDF → check file preview shows tags + summary within ~10-15s
+3. Open Ask SkyVault AI → ask a question about an uploaded file → should get a grounded answer

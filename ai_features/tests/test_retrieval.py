@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 # Helper: the module-level name to patch is where search.py *imported* it.
 # ---------------------------------------------------------------------------
 EMBED_PATCH = "ai_features.services.search.embed_text"
-ZERO_VEC = [0.0] * 1536
+ZERO_VEC = [0.0] * 384
 
 
 class TestSearchChunks(TestCase):

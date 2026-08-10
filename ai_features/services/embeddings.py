@@ -3,78 +3,74 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+# Cached model singleton — loaded once per process, shared across all calls.
+_model = None
 
-def get_openai_client():
+
+def _get_model():
     """
-    Returns an instance of OpenAI client if API key is configured.
-    Supports custom base_url endpoints (e.g. AgentRouter/OneAPI proxies).
+    Lazily loads the sentence-transformers model.
+    Uses 'all-MiniLM-L6-v2' (384 dims) — fast, free, no API key required.
+    Model is cached in-process after first load.
     """
-    api_key = getattr(settings, "OPENAI_API_KEY", "")
-    if not api_key:
-        return None
-    base_url = getattr(settings, "OPENAI_BASE_URL", "")
+    global _model
+    if _model is not None:
+        return _model
     try:
-        import openai
-        kwargs = {"api_key": api_key}
-        if base_url:
-            kwargs["base_url"] = base_url
-        return openai.OpenAI(**kwargs)
+        from sentence_transformers import SentenceTransformer
+        model_name = getattr(settings, "AI_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+        logger.info(f"Loading sentence-transformers model: {model_name}")
+        _model = SentenceTransformer(model_name)
+        logger.info("Embedding model loaded and cached.")
+        return _model
+    except ImportError:
+        logger.error("sentence-transformers is not installed. Run: pip install sentence-transformers")
+        return None
     except Exception as e:
-        logger.error(f"Failed to initialize OpenAI client: {e}")
+        logger.error(f"Failed to load embedding model: {e}")
         return None
 
 
 def embed_text(text: str) -> list[float]:
     """
-    Generates embedding vector for a single text input using OpenAI API.
-    Default model: text-embedding-3-small (1536 dimensions).
+    Generates a local embedding vector for a single text input.
+    Model: all-MiniLM-L6-v2 (384 dimensions, runs in-process, no API key needed).
+    Returns [] if model unavailable or text is empty.
     """
     if not text or not text.strip():
         return []
 
-    client = get_openai_client()
-    if not client:
-        logger.warning("OpenAI API key missing or client unavailable.")
+    model = _get_model()
+    if model is None:
+        logger.warning("Embedding model unavailable — returning empty vector.")
         return []
 
-    model = getattr(settings, "AI_EMBEDDING_MODEL", "text-embedding-3-small")
-    dimensions = getattr(settings, "AI_EMBEDDING_DIMENSIONS", 1536)
-
     try:
-        response = client.embeddings.create(
-            input=text,
-            model=model,
-            dimensions=dimensions
-        )
-        return response.data[0].embedding
+        vector = model.encode(text, normalize_embeddings=True)
+        return vector.tolist()
     except Exception as e:
-        logger.error(f"OpenAI embedding generation failed: {e}")
+        logger.error(f"embed_text failed: {e}")
         return []
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
     """
     Generates batch embedding vectors for multiple text inputs.
+    Runs all embeddings in a single batched forward pass — efficient.
+    Returns [] if model unavailable or all inputs are empty.
     """
     cleaned = [t for t in texts if t and t.strip()]
     if not cleaned:
         return []
 
-    client = get_openai_client()
-    if not client:
-        logger.warning("OpenAI API key missing or client unavailable for batch embedding.")
+    model = _get_model()
+    if model is None:
+        logger.warning("Embedding model unavailable — returning empty batch.")
         return []
 
-    model = getattr(settings, "AI_EMBEDDING_MODEL", "text-embedding-3-small")
-    dimensions = getattr(settings, "AI_EMBEDDING_DIMENSIONS", 1536)
-
     try:
-        response = client.embeddings.create(
-            input=cleaned,
-            model=model,
-            dimensions=dimensions
-        )
-        return [item.embedding for item in response.data]
+        vectors = model.encode(cleaned, normalize_embeddings=True, batch_size=32)
+        return [v.tolist() for v in vectors]
     except Exception as e:
-        logger.error(f"OpenAI batch embedding generation failed: {e}")
+        logger.error(f"embed_texts batch failed: {e}")
         return []

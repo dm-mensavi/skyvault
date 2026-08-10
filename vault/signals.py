@@ -5,7 +5,7 @@ from .models import File
 from ai_features.models import FileAnalysis
 
 TEXT_ALLOWLIST = {
-    "pdf", "txt", "md", "docx", "json", "py", "js", "html", "css", "csv", "xml"
+    "pdf", "txt", "md", "docx", "doc", "json", "py", "js", "html", "css", "csv", "xml"
 }
 
 

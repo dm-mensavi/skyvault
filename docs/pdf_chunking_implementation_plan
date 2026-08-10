@@ -1,0 +1,70 @@
+# PDF-Only Storage & Truncated PDF Chunking Implementation Plan
+
+This plan updates SkyVault to exclusively accept PDF files across all upload interfaces and implements a targeted chunking/extraction strategy for multi-page PDFs: when a PDF exceeds 10 pages, only the first 5 pages and the last 5 pages are extracted and chunked.
+
+## Proposed Changes
+
+### PDF Extraction & Chunking Strategy
+
+#### [MODIFY] [pdf.py](file:///c:/Programs/Python/skyvault/ai_features/extractors/pdf.py)
+- Inspect `len(pdf.pages)` in `extract_pdf(file_path)`.
+- If `total_pages > 10`, extract text from `pdf.pages[:5]` (first 5 pages) and `pdf.pages[-5:]` (last 5 pages).
+- If `total_pages <= 10`, extract text from all `pdf.pages`.
+- Join extracted page texts cleanly with double newlines (`\n\n`) for downstream paragraph chunking in `chunk_text()`.
+- Log page selection details (e.g., total pages and extracted range).
+
+---
+
+### Extractor Base & Signals Update
+
+#### [MODIFY] [base.py](file:///c:/Programs/Python/skyvault/ai_features/extractors/base.py)
+- Restrict `PDF_EXTENSIONS` to `{"pdf"}` and remove/deprecate plaintext formats from the allowlist.
+- Return `None` and log a warning for any non-PDF extension.
+
+#### [MODIFY] [signals.py](file:///c:/Programs/Python/skyvault/vault/signals.py)
+- Update `TEXT_ALLOWLIST` in `vault/signals.py` to `{"pdf"}` so background AI processing (`analyze_file`) is only triggered for PDF uploads.
+
+---
+
+### Backend Upload Enforcement
+
+#### [MODIFY] [views.py](file:///c:/Programs/Python/skyvault/vault/views.py)
+- In `upload_file(request)`, add file extension and MIME type validation to ensure uploaded files end with `.pdf` (case-insensitive).
+- Display user-friendly error message (`"Only PDF files (.pdf) are allowed."`) and redirect if non-PDF files are uploaded.
+
+#### [MODIFY] [forms.py](file:///c:/Programs/Python/skyvault/vault/forms.py)
+- Add Django `FileExtensionValidator(allowed_extensions=['pdf'])` to `FileUploadForm`.
+
+---
+
+### Frontend Upload Restrictions
+
+#### [MODIFY] [vault.html](file:///c:/Programs/Python/skyvault/templates/vault/vault.html)
+#### [MODIFY] [view_folder.html](file:///c:/Programs/Python/skyvault/templates/vault/view_folder.html)
+#### [MODIFY] [recent_files.html](file:///c:/Programs/Python/skyvault/templates/vault/recent_files.html)
+- Add `accept=".pdf,application/pdf"` to `<input type="file">` elements to restrict file picker dialogs to PDF files.
+
+---
+
+### Seed Command, Tests & Documentation
+
+#### [MODIFY] [seed_demo_vault.py](file:///c:/Programs/Python/skyvault/ai_features/management/commands/seed_demo_vault.py)
+- Update sample files in `DEMO_FILES` to use `.pdf` extensions.
+
+#### [MODIFY] [test_extractors.py](file:///c:/Programs/Python/skyvault/ai_features/tests/test_extractors.py)
+- Add unit tests for PDF extraction with >10 pages (verifying first 5 + last 5 page extraction) and <=10 pages.
+- Add unit test verifying non-PDF files are rejected/skipped.
+
+#### [MODIFY] [ARCHITECTURE.md](file:///c:/Programs/Python/skyvault/docs/ARCHITECTURE.md)
+- Update architecture documentation to reflect PDF-only processing and the >10 page chunking strategy.
+
+## Verification Plan
+
+### Automated Tests
+- Run Django test suite: `python manage.py test ai_features.tests`
+- Run `python manage.py check` to verify configuration.
+
+### Manual Verification
+- Upload a PDF file with <= 10 pages and verify full extraction & chunking.
+- Upload a PDF file with > 10 pages and verify only the first 5 and last 5 pages are extracted/chunked.
+- Attempt to upload a non-PDF file (`.txt`, `.jpg`, `.md`) and verify validation error message is shown and upload is rejected.

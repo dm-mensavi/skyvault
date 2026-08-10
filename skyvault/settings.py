@@ -181,12 +181,7 @@ AI_FALLBACK_MODEL = os.environ.get("AI_FALLBACK_MODEL", "")
 AI_FALLBACK_API_KEY = os.environ.get("AI_FALLBACK_API_KEY") or ANTHROPIC_API_KEY
 AI_FALLBACK_BASE_URL = os.environ.get("AI_FALLBACK_BASE_URL") or ANTHROPIC_BASE_URL
 
-# Embeddings — OpenAI-compatible endpoint (pgvector semantic search).
-# OPENAI_BASE_URL is configurable, but AgentRouter does NOT serve /v1/embeddings;
-# this needs a real OpenAI key against the default endpoint.
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
-AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "text-embedding-3-small")
-AI_EMBEDDING_DIMENSIONS = 1536
-
-
+# Embeddings — local sentence-transformers (all-MiniLM-L6-v2, 384 dims, no API key required).
+# The model is downloaded on first use and cached inside the container.
+AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+AI_EMBEDDING_DIMENSIONS = 384

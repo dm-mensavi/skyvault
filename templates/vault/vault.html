@@ -17,7 +17,9 @@
             <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">upload_file</span> Upload
             <form id="upload-form" method="post" action="{% url 'upload_file' %}" enctype="multipart/form-data" style="display:none">
                 {% csrf_token %}
-                <input type="file" name="uploaded_file" id="uploaded-file" onchange="this.closest('form').submit()">
+                <input type="file" name="uploaded_file" id="uploaded-file"
+                       accept=".pdf,.doc,.docx,.txt,.md,.csv,.json,.html,.css,.py,.js,.xml,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
+                       onchange="this.closest('form').submit()">
                 <input type="hidden" name="folder_id" id="upload-folder-id" value="">
             </form>
         </label>

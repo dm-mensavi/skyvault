@@ -29,7 +29,7 @@ class DocumentChunk(models.Model):
     analysis    = models.ForeignKey(FileAnalysis, on_delete=models.CASCADE, related_name="chunks")
     chunk_index = models.PositiveIntegerField()
     content     = models.TextField()
-    embedding   = VectorField(dimensions=1536)
+    embedding   = VectorField(dimensions=384)
     token_count = models.PositiveIntegerField(default=0)
     created_at  = models.DateTimeField(auto_now_add=True)
 

@@ -57,7 +57,7 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "meeting_notes_calendar.txt",
+        "name": "meeting_notes_calendar.pdf",
         "content": (
             b"Meeting Notes - Academic Year Planning\n\n"
             b"Date: September 1, 2024\n"
@@ -67,9 +67,9 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "code_review_final.md",
+        "name": "code_review_final.pdf",
         "content": (
-            b"# Code Review - Interactive Engineering\n\n"
+            b"Code Review - Interactive Engineering\n\n"
             b"Review of the new API endpoint for user authentication.\n"
             b"Comments:\n"
             b"1. Add rate limiting on the login endpoint\n"
@@ -78,7 +78,7 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "project_milestones.txt",
+        "name": "project_milestones.pdf",
         "content": (
             b"Project Milestones Q3 2024\n\n"
             b"1. Backend API complete - August 1\n"
@@ -89,7 +89,7 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "budget_forecast_2025.txt",
+        "name": "budget_forecast_2025.pdf",
         "content": (
             b"Budget Forecast 2025\n\n"
             b"Q1: $50,000 projected spend\n"
@@ -100,9 +100,9 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "readme_project_guidelines.md",
+        "name": "readme_project_guidelines.pdf",
         "content": (
-            b"# Project Guidelines\n\n"
+            b"Project Guidelines\n\n"
             b"This repository contains the SkyVault file management system.\n"
             b"Contributing guidelines:\n"
             b"1. Fork the repository\n"
@@ -123,7 +123,7 @@ DEMO_FILES = [
         ),
     },
     {
-        "name": "travel_receipts_2024.txt",
+        "name": "travel_receipts_2024.pdf",
         "content": (
             b"Travel Receipts 2024\n\n"
             b"Jan 15 - Flight to NYC - $340\n"
