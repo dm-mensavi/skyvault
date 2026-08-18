@@ -729,6 +729,29 @@ def storage_info(request):
     }
     return render(request, 'vault/storage_info.html', context)
 
+
+@login_required
+def empty_trash(request):
+    """Permanently deletes all trashed files and folders for the requesting user."""
+    if request.method == 'POST':
+        trashed_folders = Folder.objects.filter(user=request.user, trashed=True)
+        trashed_files = File.objects.filter(user=request.user, trashed=True)
+
+        folder_count = trashed_folders.count()
+        file_count = trashed_files.count()
+
+        trashed_files.delete()
+        trashed_folders.delete()
+
+        msg = f"Trash emptied successfully ({folder_count} folder(s), {file_count} file(s) permanently deleted)."
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            return JsonResponse({'success': True, 'message': msg})
+
+        messages.success(request, msg)
+        return redirect('trash_view')
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
 @login_required
 def toggle_star(request):
     if request.method == "POST":

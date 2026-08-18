@@ -102,3 +102,20 @@ class UploadFolderCategoryTests(TestCase):
 
         # Old generic folder should have been cleaned up since it became empty
         self.assertFalse(Folder.objects.filter(id=folder.id).exists())
+
+    def test_empty_trash(self):
+        # Create trashed file and folder
+        trashed_folder = Folder.objects.create(user=self.user, name="Old Folder", trashed=True)
+        trashed_file = File.objects.create(user=self.user, name="Old File.txt", folder=trashed_folder, trashed=True, size=500)
+
+        response = self.client.post(
+            reverse("empty_trash"),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+
+        # Verify trashed items were permanently deleted
+        self.assertFalse(Folder.objects.filter(id=trashed_folder.id).exists())
+        self.assertFalse(File.objects.filter(id=trashed_file.id).exists())

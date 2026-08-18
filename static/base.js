@@ -730,6 +730,39 @@ const SkyVault = {
       this.showToast("Network error deleting item.", "error");
     }
   },
+
+  async emptyTrash() {
+    this.hideContextMenus();
+    const confirmed = await this.confirm({
+      title: "Empty Trash",
+      message: "Are you sure you want to permanently delete all items in the trash? This action CANNOT be undone.",
+      confirmLabel: "Empty Trash",
+      danger: true,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/vault/empty-trash/", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": this.getCsrfToken(),
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(data.message || "Trash emptied successfully.", "success");
+        setTimeout(() => location.reload(), 600);
+      } else {
+        this.showToast(data.error || "Error emptying trash.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      this.showToast("Network error emptying trash.", "error");
+    }
+  },
 };
 
 document.addEventListener("DOMContentLoaded", () => SkyVault.init());

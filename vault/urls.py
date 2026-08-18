@@ -25,6 +25,7 @@ urlpatterns = [
     path('delete-folder/<int:folder_id>/', views.delete_folder, name='delete_folder'),
     path('restore/<str:item_type>/<int:item_id>/', views.restore_item, name='restore_item'),
     path('delete-permanent/<str:item_type>/<int:item_id>/', views.delete_permanent_item, name='delete_permanent_item'),
+    path('empty-trash/', views.empty_trash, name='empty_trash'),
     path('ask/', ai_views.ask_vault, name='ask_vault'),
     path('download-file/<int:file_id>/', views.download_file, name='download_file'),
 
