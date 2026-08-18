@@ -22,6 +22,29 @@ def classify_system_category(filename: str, extension: str = "", content_text: s
 
     combined_text = f"{filename} {content_text}".lower()
 
+    # Topic & Document specific suggested folders
+    if "digital campus" in combined_text or "candidature" in combined_text:
+        return "Digital Campus"
+    if "invoice" in combined_text or "facture" in combined_text:
+        return "Invoices"
+    if "receipt" in combined_text or "reçu" in combined_text:
+        return "Receipts"
+    if "tax" in combined_text or "declaration" in combined_text or "impot" in combined_text:
+        return "Taxes"
+    if "bank" in combined_text or "statement" in combined_text or "releve" in combined_text:
+        return "Bank Statements"
+    if "resume" in combined_text or "cv" in combined_text:
+        return "Resumes"
+    if "contract" in combined_text or "agreement" in combined_text:
+        return "Contracts"
+    if "medical" in combined_text or "health" in combined_text or "ordonnance" in combined_text:
+        return "Medical"
+    if "insurance" in combined_text or "assurance" in combined_text:
+        return "Insurance"
+    if "salary" in combined_text or "paie" in combined_text or "payroll" in combined_text:
+        return "Payroll"
+
+    # Code / Data / Media file extensions
     if ext in {"py", "js", "html", "css", "json", "xml", "sh", "sql", "ts", "jsx", "tsx", "c", "cpp", "java", "rb", "php"}:
         return "Code & Scripts"
 
@@ -31,9 +54,10 @@ def classify_system_category(filename: str, extension: str = "", content_text: s
     if ext in {"jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "tiff", "tif"}:
         return "Images & Media"
 
-    financial_keywords = {"invoice", "receipt", "tax", "bill", "bank", "statement", "payment", "financial", "salary", "expense", "audit", "budget"}
-    work_keywords = {"resume", "cv", "report", "contract", "agreement", "meeting", "spec", "proposal", "presentation", "project", "plan"}
-    personal_keywords = {"passport", "id", "license", "health", "medical", "insurance", "photo", "family", "vacation", "cert"}
+    # Category fallbacks
+    financial_keywords = {"bill", "payment", "financial", "expense", "audit", "budget"}
+    work_keywords = {"report", "meeting", "spec", "proposal", "presentation", "project", "plan"}
+    personal_keywords = {"passport", "id", "license", "photo", "family", "vacation", "cert"}
 
     for kw in financial_keywords:
         if kw in combined_text:
@@ -51,6 +75,47 @@ def classify_system_category(filename: str, extension: str = "", content_text: s
         return "Documents"
 
     return "General"
+
+
+def auto_organize_file_to_suggested_folder(file_obj, suggested_folder_name: str):
+    """
+    Automatically creates or reuses a Folder named after AI's suggested_folder_name,
+    moves file_obj into that folder, and deletes the old placeholder folder if it is now empty.
+    """
+    if not file_obj or not suggested_folder_name or not str(suggested_folder_name).strip():
+        return None
+
+    folder_name = str(suggested_folder_name).strip()
+
+    old_folder = file_obj.folder
+    parent_folder = old_folder.parent_folder if old_folder else None
+
+    # Get or create target folder named after suggested_folder_name
+    target_folder, _ = Folder.objects.get_or_create(
+        user=file_obj.user,
+        name=folder_name,
+        parent_folder=parent_folder,
+        trashed=False,
+        defaults={'category': folder_name}
+    )
+    if target_folder.category != folder_name:
+        target_folder.category = folder_name
+        target_folder.save(update_fields=['category'])
+
+    # Move file to target folder
+    if file_obj.folder_id != target_folder.id:
+        file_obj.folder = target_folder
+        file_obj.category = folder_name
+        file_obj.save(update_fields=['folder', 'category'])
+
+        # If old_folder is now empty (0 non-trashed files and 0 non-trashed subfolders), delete it
+        if old_folder and old_folder.id != target_folder.id:
+            file_count = old_folder.files.filter(trashed=False).count()
+            subfolder_count = old_folder.subfolders.filter(trashed=False).count()
+            if file_count == 0 and subfolder_count == 0:
+                old_folder.delete()
+
+    return target_folder
 
 
 def _get_or_create_category_folder(user, category, parent_folder):
@@ -210,27 +275,39 @@ def upload_file(request):
 
     for uf in valid_files:
         ext = uf.name.split('.')[-1].lower() if '.' in uf.name else ''
-        category = classify_system_category(uf.name, ext)
 
-        # Folder name IS the category — get existing or create new
-        category_folder = _get_or_create_category_folder(request.user, category, parent_folder)
-
+        # Initial file creation
+        initial_folder = parent_folder or _get_or_create_category_folder(request.user, "General", None)
         new_file = File.objects.create(
             user=request.user,
-            folder=category_folder,
+            folder=initial_folder,
             name=uf.name,
             uploaded_file=uf,
             size=uf.size,
-            category=category
+            category="General"
         )
 
         user_profile.used_space += uf.size
         user_profile.save()
 
+        # Extract text inline to determine suggested folder name immediately
+        extracted = ""
+        try:
+            from ai_features.extractors.base import extract_text
+            if new_file.uploaded_file and os.path.exists(new_file.uploaded_file.path):
+                extracted = extract_text(new_file.uploaded_file.path, ext) or ""
+        except Exception:
+            extracted = ""
+
+        suggested_folder = classify_system_category(uf.name, ext, extracted)
+
+        # Auto-organize file into the suggested folder
+        final_folder = auto_organize_file_to_suggested_folder(new_file, suggested_folder) or new_file.folder
+
         created_records.append({
-            'folder': category_folder,
+            'folder': final_folder,
             'file': new_file,
-            'category': category
+            'category': suggested_folder
         })
 
     if is_single:

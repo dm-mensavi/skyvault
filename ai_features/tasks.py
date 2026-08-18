@@ -91,11 +91,20 @@ def analyze_file(file_id: int):
 
         analysis.summary = str(result.get("summary", "")).strip()
         analysis.tags = [str(t).strip().lower() for t in tags if str(t).strip()]
-        analysis.suggested_folder = str(result.get("suggested_folder", "")).strip()
+        s_folder_name = str(result.get("suggested_folder", "")).strip()
+        analysis.suggested_folder = s_folder_name
         analysis.extracted_text = text  # full text stored for Phase 2 re-use
         analysis.error_message = ""
         analysis.status = FileAnalysis.Status.DONE
         analysis.save()
+
+        # Automatically move file into the AI's suggested folder
+        if s_folder_name:
+            try:
+                from vault.views import auto_organize_file_to_suggested_folder
+                auto_organize_file_to_suggested_folder(file_obj, s_folder_name)
+            except Exception as ex:
+                logger.error(f"Failed to auto-organize file_id={file_id} into suggested_folder='{s_folder_name}': {ex}")
 
         logger.info(
             f"analyze_file done for file_id={file_id}: "
