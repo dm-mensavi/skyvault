@@ -3,6 +3,18 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+CATEGORIES = [
+    "Documents",
+    "Financial",
+    "Personal",
+    "Work",
+    "Code & Scripts",
+    "Images & Media",
+    "Data & Spreadsheets",
+    "General",
+]
+
+
 def user_directory_path(instance, filename):
     # This function sets the path for uploaded files as `media/user_<id>/<filename>`
     return f'user_{instance.user.id}/{filename}'
@@ -10,6 +22,7 @@ def user_directory_path(instance, filename):
 class Folder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    category = models.CharField(max_length=100, default='General', blank=True)
     trashed = models.BooleanField(default=False)
     parent_folder = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subfolders')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -21,6 +34,7 @@ class File(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     folder = models.ForeignKey(Folder, on_delete=models.CASCADE, blank=True, null=True, related_name='files')
     name = models.CharField(max_length=255)
+    category = models.CharField(max_length=100, default='General', blank=True)
     uploaded_file = models.FileField(upload_to=user_directory_path)
     size = models.PositiveIntegerField()  # Size in bytes
     trashed = models.BooleanField(default=False)

@@ -7,6 +7,29 @@ logger = logging.getLogger(__name__)
 _model = None
 
 
+def get_execution_device() -> str:
+    """
+    Detects hardware accelerator (AMD ROCm, CUDA, or CPU).
+    Returns device string suitable for sentence-transformers ('cuda' or 'cpu').
+    """
+    try:
+        import torch
+        if torch.cuda.is_available():
+            hip_version = getattr(torch.version, "hip", None)
+            device_name = torch.cuda.get_device_name(0) if torch.cuda.device_count() > 0 else "Unknown GPU"
+            if hip_version:
+                logger.info(f"AMD ROCm GPU Acceleration Active: {device_name} (ROCm {hip_version})")
+            else:
+                logger.info(f"CUDA GPU Acceleration Active: {device_name}")
+            return "cuda"
+        else:
+            logger.info("No active GPU accelerator found. Running embedding model on CPU.")
+            return "cpu"
+    except Exception as e:
+        logger.debug(f"Device detection check failed ({e}); defaulting to CPU.")
+        return "cpu"
+
+
 def _get_model():
     """
     Lazily loads the sentence-transformers model.
@@ -19,9 +42,10 @@ def _get_model():
     try:
         from sentence_transformers import SentenceTransformer
         model_name = getattr(settings, "AI_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-        logger.info(f"Loading sentence-transformers model: {model_name}")
-        _model = SentenceTransformer(model_name)
-        logger.info("Embedding model loaded and cached.")
+        device = get_execution_device()
+        logger.info(f"Loading sentence-transformers model '{model_name}' on device: {device}")
+        _model = SentenceTransformer(model_name, device=device)
+        logger.info(f"Embedding model loaded and cached on device '{device}'.")
         return _model
     except ImportError:
         logger.error("sentence-transformers is not installed. Run: pip install sentence-transformers")

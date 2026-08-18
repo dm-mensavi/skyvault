@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -8,21 +9,39 @@ from ai_features.services.claude import generate_text
 
 logger = logging.getLogger(__name__)
 
+# Common chitchat / greeting phrases that bypass RAG document search
+CHITCHAT_PHRASES = {
+    "hi", "hello", "hey", "heya", "greetings", "good morning", "good afternoon", "good evening",
+    "how are you", "how are you doing", "whats up", "what's up", "who are you", "what are you",
+    "what can you do", "who created you", "thanks", "thank you", "thx", "bye", "goodbye",
+    "cool", "awesome", "great", "ok", "okay", "help"
+}
+
 RAG_SYSTEM_PROMPT = (
-    "You are SkyVault AI, an intelligent personal file assistant.\n"
-    "Answer the user's question using ONLY the provided document excerpts below.\n"
-    "Rules:\n"
-    "1. Cite source files using bracket numbers, e.g. [1], [2].\n"
-    "2. Be concise, direct, and helpful (2-4 paragraphs max).\n"
-    "3. If the excerpts do not contain enough information to answer, state clearly: "
-    "'I couldn't find relevant documents in your SkyVault to answer this question.'"
+    "You are SkyVault AI, a friendly, intelligent personal cloud storage assistant.\n"
+    "Guidelines:\n"
+    "1. For questions about the user's files or document content: Answer using the provided document excerpts below and cite source files using bracket numbers, e.g. [1], [2].\n"
+    "2. If the excerpts do not contain enough information to answer a document question, state clearly that you couldn't find relevant information in their uploaded documents."
 )
 
 GENERAL_SYSTEM_PROMPT = (
-    "You are SkyVault AI, an intelligent personal file assistant.\n"
-    "Answer the user's question directly, concisely, and helpfully (2-3 paragraphs max).\n"
-    "If the user asks about specific personal files or documents that aren't available, mention that you couldn't find relevant documents in their SkyVault."
+    "You are SkyVault AI, a friendly, intelligent personal cloud storage assistant.\n"
+    "Respond warmly, naturally, and helpfully to the user's message (e.g. greetings, casual chat, general questions, or small talk).\n"
+    "If the user asks about specific personal files or document contents that aren't available in their vault, politely let them know you couldn't find matching documents in SkyVault."
 )
+
+
+def is_chitchat_query(query: str) -> bool:
+    """
+    Detects if the user query is a casual greeting, small talk, or general chitchat phrase.
+    """
+    cleaned = re.sub(r'[^\w\s]', '', query.lower().strip())
+    if cleaned in CHITCHAT_PHRASES:
+        return True
+    words = cleaned.split()
+    if len(words) <= 3 and any(w in CHITCHAT_PHRASES for w in words):
+        return True
+    return False
 
 
 @login_required
@@ -46,21 +65,26 @@ def ask_vault(request):
     if not query:
         return JsonResponse({"error": "Query cannot be empty."}, status=400)
 
-    # 1. Retrieve top relevant chunks for current user.
-    # A retrieval failure is reported as such rather than silently degrading to
-    # a generic chat answer, which made a broken index look like an empty vault.
-    try:
-        chunks = search_chunks(request.user, query, top_k=5)
-    except RetrievalUnavailable as e:
-        logger.error(f"Semantic retrieval unavailable for ask_vault: {e}")
-        return JsonResponse({
-            "error": (
-                "Document search is currently unavailable, so I can't look through your "
-                "files. This usually means the embedding model failed to load. "
-                "Run 'python manage.py ai_smoke_test' to diagnose."
-            ),
-            "retrieval_unavailable": True,
-        }, status=503)
+    # 1. Check if the query is a casual greeting / chitchat phrase
+    if is_chitchat_query(query):
+        raw_chunks = []
+    else:
+        try:
+            raw_chunks = search_chunks(request.user, query, top_k=5)
+        except RetrievalUnavailable as e:
+            logger.error(f"Semantic retrieval unavailable for ask_vault: {e}")
+            return JsonResponse({
+                "error": (
+                    "Document search is currently unavailable, so I can't look through your "
+                    "files. This usually means the embedding model failed to load. "
+                    "Run 'python manage.py ai_smoke_test' to diagnose."
+                ),
+                "retrieval_unavailable": True,
+            }, status=503)
+
+    # Filter retrieved chunks by relevance score threshold (minimum 0.35 similarity).
+    RELEVANCE_THRESHOLD = 0.35
+    chunks = [c for c in raw_chunks if getattr(c, "relevance_score", 0) >= RELEVANCE_THRESHOLD]
 
     sources = []
     seen_files = set()
@@ -72,6 +96,7 @@ def ask_vault(request):
             if chunk.file_id not in seen_files:
                 seen_files.add(chunk.file_id)
                 sources.append({
+                    "index": idx,
                     "id": chunk.file.id,
                     "name": chunk.file.name,
                     "score": chunk.relevance_score,
@@ -85,7 +110,9 @@ def ask_vault(request):
 
     # 2. Synthesize the answer (primary model, with fallback)
     try:
-        answer = generate_text(system_prompt, user_prompt, max_tokens=1000)
+        # Use concise token limits for fast responses. RAG: 200 tokens, chitchat: 100.
+        token_limit = 200 if chunks else 100
+        answer = generate_text(system_prompt, user_prompt, max_tokens=token_limit)
         if not answer:
             if sources:
                 return JsonResponse({
@@ -94,19 +121,23 @@ def ask_vault(request):
                 })
             else:
                 return JsonResponse({
-                    "answer": "I couldn't find relevant documents in your SkyVault for this query. (Note: No AI generation model is currently configured to synthesize a general answer).",
+                    "answer": "Hello! I'm SkyVault AI, your personal cloud assistant. How can I help you with your files today?",
                     "sources": []
                 })
+
+
+        # Strict Citation Filter: Only include sources that were ACTUALLY cited in the AI answer text (e.g. [1], [2]).
+        cited_indices = set(int(m) for m in re.findall(r'\[(\d+)\]', answer))
+        final_sources = [s for s in sources if s.get("index") in cited_indices]
+
         return JsonResponse({
             "answer": answer,
-            "sources": sources
+            "sources": final_sources
         })
     except Exception as e:
-        # The detail goes to the log, not the browser: the client renders `error`
-        # verbatim in the chat, and a raw exception string leaks internals.
         logger.error(f"Error in ask_vault RAG call: {e}", exc_info=True)
         return JsonResponse({
             "answer": "An error occurred while generating the answer. Please try again.",
-            "sources": sources,
+            "sources": [],
             "error": "An error occurred while generating the answer. Please try again.",
         }, status=500)

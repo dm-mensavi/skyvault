@@ -2,15 +2,24 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+        (function() {
+            var theme = localStorage.getItem("skyvault-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+            if (theme === "dark") { document.documentElement.classList.add("dark"); }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}SkyVault{% endblock %}</title>
     <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
-    <link rel="stylesheet" href="{% static 'base.css' %}?v=8">
+    <link rel="stylesheet" href="{% static 'output.css' %}?v=13">
+    <link rel="stylesheet" href="{% static 'base.css' %}?v=3">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
     <div class="app-shell">
         <aside class="sidebar" id="sidebar">
@@ -88,61 +97,102 @@
     <!-- Global In-App Preview Overlay Modal -->
     <div id="preview-modal" class="modal preview-modal" role="dialog" aria-hidden="true">
         <div class="modal-backdrop" onclick="SkyVault.closePreviewModal()"></div>
-        <div class="modal-card preview-card">
+        <div class="preview-card">
+            <!-- Header bar: icon + title + action buttons -->
             <div class="preview-header">
                 <div class="preview-title-wrap">
                     <span class="material-icons preview-icon" id="preview-icon">insert_drive_file</span>
-                    <h3 id="preview-title">File Preview</h3>
+                    <h3 id="preview-title" class="preview-title-text">File Preview</h3>
                 </div>
-                <button type="button" class="icon-btn" onclick="SkyVault.closePreviewModal()" aria-label="Close">
+                <div class="preview-actions">
+                    <a id="preview-open-btn" href="#" target="_blank" class="btn btn-ghost preview-action-btn" title="Open full document in-app">
+                        <span class="material-icons">open_in_full</span>
+                        <span>Open</span>
+                    </a>
+                    <a id="preview-download-btn" href="#" class="btn btn-ghost preview-action-btn" title="Download file" download>
+                        <span class="material-icons">download</span>
+                        <span>Download</span>
+                    </a>
+                    <button type="button" class="icon-btn" onclick="SkyVault.closePreviewModal()" aria-label="Close">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Two-column body: document viewer + AI sidebar -->
+            <div class="preview-layout">
+                <div class="preview-doc-panel" id="preview-body">
+                    <div class="spinner-container"><span class="material-icons spinner">sync</span> Loading preview...</div>
+                </div>
+                <aside class="preview-ai-sidebar">
+                    <div class="ai-section-header">
+                        <span class="material-icons">auto_awesome</span>
+                        <span>AI Insights</span>
+                    </div>
+                    <div class="ai-content-box skyvault-scroll" id="preview-ai-content">
+                        <p class="ai-placeholder-text">AI analysis will populate automatically once background pipeline is initialized.</p>
+                        <div class="tag-chips-placeholder">
+                            <span class="chip">#document</span>
+                            <span class="chip">#skyvault</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-App Full Document Viewer (Gmail-style fullscreen iframe) -->
+    <div id="doc-viewer-modal" class="modal doc-viewer-modal" role="dialog" aria-hidden="true">
+        <div class="doc-viewer-toolbar">
+            <div class="doc-viewer-title-wrap">
+                <span class="material-icons" id="doc-viewer-icon">description</span>
+                <span id="doc-viewer-title" class="doc-viewer-title">Document</span>
+            </div>
+            <div class="doc-viewer-actions">
+                <a id="doc-viewer-download-btn" href="#" class="btn btn-ghost preview-action-btn" download title="Download">
+                    <span class="material-icons">download</span>
+                    <span>Download</span>
+                </a>
+                <button type="button" class="icon-btn" onclick="SkyVault.closeDocViewer()" aria-label="Close viewer">
                     <span class="material-icons">close</span>
                 </button>
             </div>
-            <div class="preview-body" id="preview-body">
-                <div class="spinner-container"><span class="material-icons spinner">sync</span> Loading preview...</div>
-            </div>
-            <div class="preview-ai-section" id="preview-ai-section">
-                <div class="ai-section-header">
-                    <span class="material-icons">auto_awesome</span>
-                    <span>AI Insights & Summary</span>
-                </div>
-                <div class="ai-content-box" id="preview-ai-content">
-                    <p class="ai-placeholder-text">AI analysis will populate automatically once background pipeline is initialized.</p>
-                    <div class="tag-chips-placeholder">
-                        <span class="chip">#document</span>
-                        <span class="chip">#skyvault</span>
-                    </div>
-                </div>
-            </div>
+        </div>
+        <div class="doc-viewer-body">
+            <iframe id="doc-viewer-iframe" src="" title="Document viewer" allowfullscreen></iframe>
         </div>
     </div>
 
     <!-- Global Ask SkyVault AI RAG Chat Modal -->
     <div id="rag-chat-modal" class="modal rag-modal" role="dialog" aria-hidden="true">
         <div class="modal-backdrop" onclick="SkyVault.closeRagModal()"></div>
-        <div class="modal-card rag-card" style="max-width: 640px; width: 90%; height: 75vh; display: flex; flex-direction: column;">
-            <div class="preview-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color, #dadce0);">
+        <div class="modal-card rag-card" style="max-width: 640px; width: 90%; height: 75vh; display: flex; flex-direction: column; padding: 0;">
+            <div class="rag-header">
                 <div class="preview-title-wrap" style="display: flex; align-items: center; gap: 8px;">
-                    <span class="material-icons" style="color: var(--primary-color, #1a73e8);">auto_awesome</span>
+                    <span class="material-icons" style="color: var(--accent-color);">auto_awesome</span>
                     <h3 style="margin: 0; font-size: 18px;">Ask SkyVault AI</h3>
-                    <span class="ai-badge" style="background: var(--primary-light, #e8f0fe); color: var(--primary-color, #1a73e8); font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 500;">RAG Q&A</span>
+                    <span class="rag-badge">RAG Q&amp;A</span>
                 </div>
-                <button type="button" class="icon-btn" onclick="SkyVault.closeRagModal()" aria-label="Close">
-                    <span class="material-icons">close</span>
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="icon-btn" onclick="SkyVault.clearRagHistory()" title="Clear Chat History">
+                        <span class="material-icons">delete_sweep</span>
+                    </button>
+                    <button type="button" class="icon-btn" onclick="SkyVault.closeRagModal()" aria-label="Close">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
             </div>
-            <div class="rag-chat-body" id="rag-chat-body" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
-                <div class="rag-message system-msg" style="display: flex; gap: 12px; background: var(--bg-hover, #f8f9fa); padding: 12px 16px; border-radius: 8px;">
-                    <span class="material-icons" style="color: var(--primary-color, #1a73e8);">auto_awesome</span>
+            <div class="rag-chat-body" id="rag-chat-body">
+                <div class="rag-message system-msg">
+                    <span class="material-icons">auto_awesome</span>
                     <div>
-                        <p style="margin: 0; font-size: 14px; font-weight: 500;">Hi! I'm SkyVault AI.</p>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">Ask me any question about your documents, invoices, or notes. I'll search your vector embeddings and cite the exact source files.</p>
+                        <p style="font-weight: 600;">Hi! I'm SkyVault AI.</p>
+                        <p class="subtext">Ask me any question about your documents, invoices, or notes. I'll search your vector embeddings and cite the exact source files.</p>
                     </div>
                 </div>
             </div>
-            <div class="rag-chat-input-row" style="padding: 16px 20px; border-top: 1px solid var(--border-color, #dadce0); display: flex; gap: 8px;">
-                <input type="text" id="rag-input" placeholder="Ask a question about your files..." style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-color, #dadce0); border-radius: 20px; font-size: 14px; outline: none;" onkeypress="if(event.key==='Enter') SkyVault.submitRagQuery()">
-                <button type="button" class="btn btn-primary" onclick="SkyVault.submitRagQuery()" style="border-radius: 20px; padding: 8px 16px; display: flex; align-items: center; gap: 4px;">
+            <div class="rag-chat-input-row">
+                <input type="text" id="rag-input" placeholder="Ask a question about your files..." onkeypress="if(event.key==='Enter') SkyVault.submitRagQuery()">
+                <button type="button" class="btn btn-primary" onclick="SkyVault.submitRagQuery()" style="border-radius: 20px; padding: 10px 18px; display: flex; align-items: center; gap: 4px;">
                     <span>Ask</span>
                     <span class="material-icons" style="font-size: 18px;">send</span>
                 </button>
@@ -150,10 +200,49 @@
         </div>
     </div>
 
+    <!-- Upload Confirmation Modal (File rename only) -->
+    <div id="upload-confirm-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-backdrop" onclick="SkyVault.closeUploadConfirmModal()"></div>
+        <div class="modal-card" style="max-width: 460px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <span class="material-icons" style="color:var(--accent-color); font-size:28px;">folder_special</span>
+                <div>
+                    <h3 style="margin:0; font-size:18px;">Upload Complete</h3>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:var(--text-secondary);">File saved to the system category folder. You can rename the file below.</p>
+                </div>
+            </div>
+
+            <!-- System Category Badge -->
+            <div id="upload-confirm-priority-badge" class="system-priority-box" style="background:var(--accent-light, #e8f0fe); color:var(--accent-color, #1a73e8); padding:10px 14px; border-radius:10px; font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                <span class="material-icons" style="font-size:18px;">auto_awesome</span>
+                <span>Saved to: <strong id="upload-confirm-suggested-category">General</strong> folder</span>
+            </div>
+
+            <form id="upload-confirm-form" onsubmit="SkyVault.submitUploadConfirm(event)">
+                <input type="hidden" id="upload-confirm-folder-id" value="">
+                <input type="hidden" id="upload-confirm-file-id" value="">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">File Name</label>
+                    <input type="text" id="upload-confirm-file-name"
+                        style="width:100%; padding:10px 14px; border:1px solid var(--border-color); border-radius:10px; font-size:14px; background:var(--bg-primary); color:var(--text-primary); outline:none;" required>
+                    <p style="margin:5px 0 0 0; font-size:11px; color:var(--text-secondary);">The folder name is managed by the system and matches the category.</p>
+                </div>
+
+                <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button" class="btn btn-secondary" onclick="SkyVault.closeUploadConfirmModal()">Keep Defaults</button>
+                    <button type="submit" class="btn btn-primary">Confirm &amp; Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="{% static 'base.js' %}?v=10"></script>
+    <script src="{% static 'base.js' %}?v=15"></script>
+
+
     {% block extra_js %}{% endblock %}
 </body>
 

@@ -1,0 +1,15 @@
+{
+  "name": "skyvault-frontend",
+  "version": "1.0.0",
+  "description": "SkyVault Tailwind CSS build",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/src/input.css -o ./static/output.css --minify",
+    "watch:css": "tailwindcss -i ./static/src/input.css -o ./static/output.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "autoprefixer": "^10.4.19",
+    "tailwindcss": "^3.4.4"
+  }
+}

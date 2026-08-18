@@ -239,6 +239,55 @@ const SkyVaultDrive = (() => {
     }, 5000);
   }
 
+  // ─── File Upload Handler (Single & Multi-File) ────────────────────────────────
+  async function handleFileUpload(input) {
+    if (!input || !input.files || input.files.length === 0) return;
+
+    const form = input.closest('form');
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const parentFolderId = formData.get('folder_id') || getCurrentFolderId();
+    if (parentFolderId && !formData.get('folder_id')) {
+      formData.set('folder_id', parentFolderId);
+    }
+
+    SkyVault.showToast('Uploading & categorizing file(s)...', 'info');
+
+    try {
+      const res = await fetch(form.action || '/vault/upload/', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+          'X-CSRFToken': csrfToken(),
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        SkyVault.showToast(data.error || 'Upload failed.', 'error');
+        return;
+      }
+
+      if (data.is_single) {
+        // Single file upload: Open confirmation modal pre-filled
+        SkyVault.openUploadConfirmModal(data);
+      } else {
+        // Multi-file upload: Auto-categorized toast and view refresh
+        SkyVault.showToast(data.message || `Uploaded & auto-categorized ${data.count} files.`, 'success');
+        setTimeout(() => location.reload(), 800);
+      }
+    } catch (err) {
+      console.error(err);
+      SkyVault.showToast('Network error uploading file. Submitting form...', 'error');
+      form.submit();
+    } finally {
+      input.value = '';
+    }
+  }
+
   // ─── Init ────────────────────────────────────────────────────────────────────
   function init() {
     patchGlobalTriggers();
@@ -250,5 +299,5 @@ const SkyVaultDrive = (() => {
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return { openCreateFolderModal, closeCreateFolderModal, pasteItem };
+  return { openCreateFolderModal, closeCreateFolderModal, pasteItem, handleFileUpload };
 })();

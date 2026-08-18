@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
@@ -9,9 +10,64 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from ai_features.services.search import search_files, RetrievalUnavailable
 from .forms import FileUploadForm, FolderForm
-from .models import File, Folder
+from .models import File, Folder, CATEGORIES
 
 logger = logging.getLogger(__name__)
+
+
+def classify_system_category(filename: str, extension: str = "", content_text: str = "") -> str:
+    ext = extension.lower().strip('.') if extension else ''
+    if not ext and '.' in filename:
+        ext = filename.split('.')[-1].lower()
+
+    combined_text = f"{filename} {content_text}".lower()
+
+    if ext in {"py", "js", "html", "css", "json", "xml", "sh", "sql", "ts", "jsx", "tsx", "c", "cpp", "java", "rb", "php"}:
+        return "Code & Scripts"
+
+    if ext in {"csv", "xlsx", "xls", "tsv", "ods"}:
+        return "Data & Spreadsheets"
+
+    if ext in {"jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "tiff", "tif"}:
+        return "Images & Media"
+
+    financial_keywords = {"invoice", "receipt", "tax", "bill", "bank", "statement", "payment", "financial", "salary", "expense", "audit", "budget"}
+    work_keywords = {"resume", "cv", "report", "contract", "agreement", "meeting", "spec", "proposal", "presentation", "project", "plan"}
+    personal_keywords = {"passport", "id", "license", "health", "medical", "insurance", "photo", "family", "vacation", "cert"}
+
+    for kw in financial_keywords:
+        if kw in combined_text:
+            return "Financial"
+
+    for kw in work_keywords:
+        if kw in combined_text:
+            return "Work"
+
+    for kw in personal_keywords:
+        if kw in combined_text:
+            return "Personal"
+
+    if ext in {"pdf", "doc", "docx", "txt", "md", "rtf", "pages"}:
+        return "Documents"
+
+    return "General"
+
+
+def _get_or_create_category_folder(user, category, parent_folder):
+    """Retrieve an existing category folder or create one. Category folders are reused."""
+    folder, _ = Folder.objects.get_or_create(
+        user=user,
+        name=category,
+        parent_folder=parent_folder,
+        trashed=False,
+        defaults={'category': category}
+    )
+    # Ensure category field stays in sync even if folder already existed
+    if folder.category != category:
+        folder.category = category
+        folder.save(update_fields=['category'])
+    return folder
+
 
 
 
@@ -92,60 +148,157 @@ def upload_file(request):
     if request.method != "POST":
         return redirect('vault_home')
 
-    uploaded_file = request.FILES.get('uploaded_file')
-    if not uploaded_file:
-        messages.error(request, "No file selected.")
-        return redirect('vault_home')
+    uploaded_files = request.FILES.getlist('uploaded_file')
+    if not uploaded_files:
+        single_f = request.FILES.get('uploaded_file')
+        if single_f:
+            uploaded_files = [single_f]
+
+    is_json = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '') or
+        request.GET.get('format') == 'json'
+    )
 
     folder_id = request.POST.get('folder_id')
-    folder = None
-
-    # Retrieve the folder if folder_id is provided
+    parent_folder = None
     if folder_id:
-        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+        parent_folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+
+    if not uploaded_files:
+        if is_json:
+            return JsonResponse({'success': False, 'error': 'No file selected.'}, status=400)
+        messages.error(request, "No file selected.")
+        return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
 
     user_profile = request.user.userprofile
 
-    # Exclude audio and video files
     AUDIO_EXTENSIONS = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "wma", "m4r", "aiff", "opus", "mid", "midi"}
     VIDEO_EXTENSIONS = {"mp4", "avi", "mov", "mkv", "webm", "flv", "wmv", "m4v", "3gp", "ogv"}
     DISALLOWED_EXTENSIONS = AUDIO_EXTENSIONS | VIDEO_EXTENSIONS
 
-    file_extension = uploaded_file.name.split('.')[-1].lower() if '.' in uploaded_file.name else ''
-    content_type = getattr(uploaded_file, 'content_type', '') or ''
+    valid_files = []
+    for uf in uploaded_files:
+        ext = uf.name.split('.')[-1].lower() if '.' in uf.name else ''
+        content_type = getattr(uf, 'content_type', '') or ''
 
-    if file_extension in DISALLOWED_EXTENSIONS or content_type.startswith(('audio/', 'video/')):
-        messages.error(request, "Audio and video files are not allowed.")
-        return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
+        if ext in DISALLOWED_EXTENSIONS or content_type.startswith(('audio/', 'video/')):
+            err_msg = f"Audio and video files are not allowed ({uf.name})."
+            if is_json:
+                return JsonResponse({'success': False, 'error': err_msg}, status=400)
+            messages.error(request, err_msg)
+            return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
 
-    # Check for file size limits
-    if uploaded_file.size > 40 * 1024 * 1024:  # 40 MB limit
-        messages.error(request, "File exceeds max size of 40 MB.")
-        return redirect('vault_home')
+        if uf.size > 40 * 1024 * 1024:
+            err_msg = f"File '{uf.name}' exceeds max size of 40 MB."
+            if is_json:
+                return JsonResponse({'success': False, 'error': err_msg}, status=400)
+            messages.error(request, err_msg)
+            return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
 
-    # Check if user has exceeded storage limits
-    if user_profile.is_storage_exceeded(uploaded_file.size):
-        messages.error(request, "Storage limit exceeded.")
-        return redirect('vault_home')
+        if user_profile.is_storage_exceeded(uf.size):
+            err_msg = "Storage limit exceeded."
+            if is_json:
+                return JsonResponse({'success': False, 'error': err_msg}, status=400)
+            messages.error(request, err_msg)
+            return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
 
-    # Check if a file with the same name already exists in the selected folder
-    if File.objects.filter(user=request.user, name=uploaded_file.name, folder=folder).exists():
-        messages.error(request, "File already exists in the selected folder.")
-        return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
+        valid_files.append(uf)
 
-    # Save the file and update user's used storage space
-    File.objects.create(
-        user=request.user,
-        folder=folder,  # Assign to the selected folder or None for root level
-        name=uploaded_file.name,
-        uploaded_file=uploaded_file,
-        size=uploaded_file.size,
-    )
-    user_profile.used_space += uploaded_file.size
-    user_profile.save()
+    created_records = []
+    is_single = len(valid_files) == 1
 
-    messages.success(request, "File uploaded successfully!")
-    return redirect('view_folder', folder_id=folder.id) if folder else redirect('vault_home')
+    for uf in valid_files:
+        ext = uf.name.split('.')[-1].lower() if '.' in uf.name else ''
+        category = classify_system_category(uf.name, ext)
+
+        # Folder name IS the category — get existing or create new
+        category_folder = _get_or_create_category_folder(request.user, category, parent_folder)
+
+        new_file = File.objects.create(
+            user=request.user,
+            folder=category_folder,
+            name=uf.name,
+            uploaded_file=uf,
+            size=uf.size,
+            category=category
+        )
+
+        user_profile.used_space += uf.size
+        user_profile.save()
+
+        created_records.append({
+            'folder': category_folder,
+            'file': new_file,
+            'category': category
+        })
+
+    if is_single:
+        rec = created_records[0]
+        if is_json:
+            return JsonResponse({
+                'success': True,
+                'is_single': True,
+                'folder_id': rec['folder'].id,
+                'folder_name': rec['folder'].name,
+                'file_id': rec['file'].id,
+                'file_name': rec['file'].name,
+                'category': rec['category'],
+                'categories': CATEGORIES,
+                'message': 'File uploaded and folder created successfully.'
+            })
+        messages.success(request, f"Folder '{rec['folder'].name}' created for '{rec['file'].name}'. Category: {rec['category']}.")
+        return redirect('view_folder', folder_id=rec['folder'].id)
+    else:
+        msg = f"Successfully uploaded and auto-categorized {len(created_records)} files into dedicated folders."
+        if is_json:
+            return JsonResponse({
+                'success': True,
+                'is_single': False,
+                'count': len(created_records),
+                'message': msg
+            })
+        messages.success(request, msg)
+        return redirect('view_folder', folder_id=parent_folder.id) if parent_folder else redirect('vault_home')
+
+
+@login_required
+def confirm_upload_details(request):
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+    try:
+        data = json.loads(request.body) if request.body else request.POST
+    except Exception:
+        data = request.POST
+
+    folder_id = data.get('folder_id')
+    file_id = data.get('file_id')
+    folder_name = data.get('folder_name')
+    file_name = data.get('file_name')
+    category = data.get('category')
+
+    if not folder_id or not file_id:
+        return JsonResponse({'success': False, 'error': 'Missing folder_id or file_id'}, status=400)
+
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    file_obj = get_object_or_404(File, id=file_id, user=request.user)
+
+    # Folder name is always the system category — only file name is editable by the user
+    if file_name and file_name.strip():
+        file_obj.name = file_name.strip()
+
+    file_obj.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Folder & File details updated successfully!',
+        'folder_id': folder.id,
+        'folder_name': folder.name,
+        'file_id': file_obj.id,
+        'file_name': file_obj.name,
+        'category': folder.category
+    })
 
 
 @login_required
@@ -221,6 +374,21 @@ def open_file(request, file_id):
         return response
     except (FileNotFoundError, OSError):
         return JsonResponse({'error': 'File missing from storage'}, status=404)
+
+
+@login_required
+def download_file(request, file_id):
+    """Serves the file as a forced attachment download (Content-Disposition: attachment)."""
+    file_instance = get_object_or_404(File, id=file_id, user=request.user)
+    if not file_instance.uploaded_file:
+        return JsonResponse({'error': 'File missing'}, status=404)
+    try:
+        response = FileResponse(file_instance.uploaded_file.open('rb'), as_attachment=True)
+        response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
+        return response
+    except (FileNotFoundError, OSError):
+        return JsonResponse({'error': 'File missing from storage'}, status=404)
+
 
 
 

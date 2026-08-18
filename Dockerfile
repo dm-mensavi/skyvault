@@ -15,10 +15,11 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements file and install dependencies
 COPY requirements.txt /app/
+# Install lightweight PyTorch CPU package (~150MB) to prevent 2.5GB+ NVIDIA CUDA bloat and 4GB download hangs
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
-
-# Copy the application code
+# Copy the application code (including pre-built static/output.css)
 COPY . /app/
 
 # Normalize Windows line endings and grant execution permissions

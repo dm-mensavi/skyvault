@@ -1,57 +1,111 @@
-<!-- accounts/templates/accounts/login.html -->
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SkyVault</title>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'output.css' %}?v=12">
+</head>
+<body class="auth-body">
+    <div class="ambient-background">
+        <div class="gradient-sphere sphere-1"></div>
+        <div class="gradient-sphere sphere-2"></div>
+    </div>
 
-{% block title %}<title>Login - SkyVault</title>{% endblock %}
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <div class="logo-wrapper">
+                    <span class="material-icons brand-icon">cloud</span>
+                </div>
+                <h1 class="brand-title">SkyVault</h1>
+                <p class="brand-subtitle">AI-Powered Intelligent Personal Cloud Storage</p>
+            </div>
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'accounts/accounts.css' %}?=v3">
-{% endblock %}
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to access your secure vault & files</p>
+            </div>
 
-{% block content %}
-    <div class="auth-container">
-        <div class="login">
-            <h2>Login</h2>
-            <form method="post">
+            <form method="post" class="auth-form">
                 {% csrf_token %}
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-                <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
-        
-        {% if messages %}
-        <div class="message-container" >
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}" id="alert-container">{{ message }}</div>
-            {% endfor %}
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <span class="material-icons input-icon">person</span>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <span class="material-icons input-icon">lock</span>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
+                            <span class="material-icons">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>Sign In</span>
+                    <span class="material-icons btn-arrow">arrow_forward</span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account yet? <a href="{% url 'register' %}" class="auth-link">Create Account</a></p>
             </div>
         </div>
+
+        {% if messages %}
+        <div class="message-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <span class="material-icons alert-icon">
+                    {% if message.tags == 'success' %}check_circle
+                    {% elif message.tags == 'error' %}error
+                    {% else %}info{% endif %}
+                </span>
+                <span class="alert-text">{{ message }}</span>
+                <button type="button" class="close-btn" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
-</div>
+    </div>
 
-{% endblock %}
-{% block extra_js %}
-<script>
-    // Dismiss message automatically after 5 seconds
-    document.addEventListener("DOMContentLoaded", function () {
-        const alerts = document.querySelectorAll(".alert");
-        
-        // Hide alerts automatically after 5 seconds
-        setTimeout(() => {
-            alerts.forEach(alert => alert.style.display = "none");
-        }, 5000);
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('.material-icons');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
 
-        // Add close button functionality
-        alerts.forEach(alert => {
-            const closeButton = document.createElement("button");
-            closeButton.classList.add("close-btn");
-            closeButton.innerHTML = "&times;";
-            closeButton.onclick = () => alert.style.display = "none";
-            alert.appendChild(closeButton);
+        document.addEventListener("DOMContentLoaded", function () {
+            const alerts = document.querySelectorAll(".alert");
+            setTimeout(() => {
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
         });
-    });
-</script>
-{% endblock %}
-
+    </script>
+</body>
+</html>

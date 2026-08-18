@@ -56,12 +56,12 @@ class TestPDFExtractor(TestCase):
             self.assertIn(f"Page content {p}", result)
 
     def test_unsupported_non_pdf_extension(self):
-        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as f:
             f.write(b"text data")
             temp_path = f.name
 
         try:
-            result = extract_text(temp_path, "txt")
+            result = extract_text(temp_path, "bin")
             self.assertIsNone(result)
         finally:
             os.unlink(temp_path)

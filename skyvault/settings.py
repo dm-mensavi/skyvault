@@ -172,7 +172,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Primary generation — Anthropic-compatible endpoint
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
 ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "")
-AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL") or os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
+AI_CLAUDE_MODEL = os.environ.get("AI_CLAUDE_MODEL") or os.environ.get("ANTHROPIC_MODEL", "gpt-5.6-sol")
 
 # Secondary generation — used only when the primary path is unset or errors.
 # Also an Anthropic-compatible endpoint: the gateway serves non-Claude models

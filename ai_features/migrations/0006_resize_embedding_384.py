@@ -19,37 +19,34 @@ class Migration(migrations.Migration):
         ("ai_features", "0005_storageinsight_and_more"),
     ]
 
-    operations = [
-        # 1. Drop old HNSW index (was built for 1536-dim vectors)
-        migrations.RunSQL(
-            sql="DROP INDEX IF EXISTS ai_features_documentchunk_embedding_hnsw;",
-            reverse_sql="",  # can't recreate the 1536-dim index in rollback — handled below
-        ),
-
-        # 2. Clear all existing chunk rows (old 1536-dim vectors are incompatible)
-        migrations.RunSQL(
-            sql="DELETE FROM ai_features_documentchunk;",
-            reverse_sql="",
-        ),
-
-        # 3. Alter embedding column to vector(384)
-        migrations.RunSQL(
-            sql="ALTER TABLE ai_features_documentchunk ALTER COLUMN embedding TYPE vector(384);",
-            reverse_sql="ALTER TABLE ai_features_documentchunk ALTER COLUMN embedding TYPE vector(1536);",
-        ),
-
-        # 4. Recreate HNSW index for cosine distance (384-dim)
-        migrations.RunSQL(
-            sql=(
+def forwards_func(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("DROP INDEX IF EXISTS ai_features_documentchunk_embedding_hnsw;")
+            cursor.execute("DELETE FROM ai_features_documentchunk;")
+            cursor.execute("ALTER TABLE ai_features_documentchunk ALTER COLUMN embedding TYPE vector(384);")
+            cursor.execute(
                 "CREATE INDEX ai_features_documentchunk_embedding_hnsw "
                 "ON ai_features_documentchunk "
                 "USING hnsw (embedding vector_cosine_ops) "
                 "WITH (m = 16, ef_construction = 64);"
-            ),
-            reverse_sql="DROP INDEX IF EXISTS ai_features_documentchunk_embedding_hnsw;",
-        ),
+            )
 
-        # 5. Update Django model field definition so makemigrations stays in sync
+def reverse_func(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("DROP INDEX IF EXISTS ai_features_documentchunk_embedding_hnsw;")
+            cursor.execute("ALTER TABLE ai_features_documentchunk ALTER COLUMN embedding TYPE vector(1536);")
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("ai_features", "0005_storageinsight_and_more"),
+    ]
+
+    operations = [
+        migrations.RunPython(forwards_func, reverse_code=reverse_func),
         migrations.AlterField(
             model_name="documentchunk",
             name="embedding",

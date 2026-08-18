@@ -9,7 +9,7 @@
       </div>
       <div class="card-info">
           <span class="card-title">{{ folder.name }}</span>
-          <span class="card-sub">Folder</span>
+          <span class="card-sub">Folder{% if folder.category %} • <span class="badge-category">{{ folder.category }}</span>{% endif %}</span>
       </div>
   </div>
   {% endfor %}
@@ -22,7 +22,7 @@
       </div>
       <div class="card-info">
           <span class="card-title">{{ file.name }}</span>
-          <span class="card-sub">{{ file.size|filesizeformat }}</span>
+          <span class="card-sub">{{ file.size|filesizeformat }}{% if file.category %} • <span class="badge-category">{{ file.category }}</span>{% endif %}</span>
       </div>
   </div>
   {% endfor %}

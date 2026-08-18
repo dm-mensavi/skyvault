@@ -8,6 +8,7 @@ from ai_features import views as ai_views
 urlpatterns = [
     path("", views.vault_home, name="vault_home"),
     path('upload/', views.upload_file, name='upload_file'),
+    path('confirm-upload-details/', views.confirm_upload_details, name='confirm_upload_details'),
     path('create-folder/', views.create_folder, name='create_folder'),
     path('folder/<int:folder_id>/', views.view_folder, name='view_folder'),
     path('open-file/<int:file_id>/', views.open_file, name='open_file'),
@@ -25,6 +26,7 @@ urlpatterns = [
     path('restore/<str:item_type>/<int:item_id>/', views.restore_item, name='restore_item'),
     path('delete-permanent/<str:item_type>/<int:item_id>/', views.delete_permanent_item, name='delete_permanent_item'),
     path('ask/', ai_views.ask_vault, name='ask_vault'),
+    path('download-file/<int:file_id>/', views.download_file, name='download_file'),
 
 
 ]

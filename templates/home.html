@@ -1,32 +1,99 @@
-<!-- templates/home.html -->
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to SkyVault</title>
-    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <title>Welcome to SkyVault AI</title>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'output.css' %}?v=12">
 </head>
-<body>
-    <div class="container">
-        <h1>Welcome to SkyVault</h1>
-        <p>Your secure, personal cloud storage solution. Store, share, and manage files effortlessly.</p>
-        
-        <div class="buttons">
-            <a href="{% url 'login' %}" class="button">Login</a>
-            <a href="{% url 'register' %}" class="button">Register</a>
-        </div>
+<body class="welcome-body">
+    <div class="ambient-background">
+        <div class="gradient-sphere sphere-1"></div>
+        <div class="gradient-sphere sphere-2"></div>
+    </div>
 
-        <div class="info">
-            <h3>What SkyVault Offers:</h3>
-            <ul>
-                <li>Secure file storage and backup</li>
-                <li>Easy file sharing with others</li>
-                <li>Real-time collaboration and notifications</li>
-                <li>Access your files from any device, anytime</li>
-            </ul>
+    <div class="welcome-wrapper">
+        <div class="welcome-card">
+            <!-- Brand Header -->
+            <div class="brand-header">
+                <div class="logo-wrapper">
+                    <span class="material-icons brand-icon">cloud</span>
+                </div>
+                <h1 class="brand-title">SkyVault <span class="ai-badge">AI</span></h1>
+                <p class="brand-tagline">AI-Powered Intelligent Personal Cloud Vault</p>
+            </div>
+
+            <!-- Intro Text -->
+            <p class="hero-description">
+                Experience next-generation cloud storage powered by local vector embeddings and AI retrieval. Store, analyze, and query your files with instant document intelligence.
+            </p>
+
+            <!-- Main CTAs -->
+            <div class="cta-buttons">
+                <a href="{% url 'login' %}" class="btn btn-primary">
+                    <span>Sign In</span>
+                    <span class="material-icons">login</span>
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-secondary">
+                    <span>Create Account</span>
+                    <span class="material-icons">person_add</span>
+                </a>
+            </div>
+
+            <!-- Features Section -->
+            <div class="features-section">
+                <h3 class="features-title">
+                    <span class="material-icons">auto_awesome</span>
+                    What SkyVault AI Delivers
+                </h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrap">
+                            <span class="material-icons">psychology</span>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Ask SkyVault AI (RAG Q&amp;A)</h4>
+                            <p>Query your PDFs, docs, and notes using vector retrieval with cited document sources.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon-wrap">
+                            <span class="material-icons">auto_stories</span>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Automated AI Summaries</h4>
+                            <p>Instant document summarization, automated tagging, and smart folder recommendations.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon-wrap">
+                            <span class="material-icons">analytics</span>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Smart Storage Insights</h4>
+                            <p>Real-time drive analytics, storage trends, and automated cleanup recommendations.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon-wrap">
+                            <span class="material-icons">travel_explore</span>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Semantic Vector Search</h4>
+                            <p>Find files by meaning instead of exact keywords using pgvector HNSW indexing.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

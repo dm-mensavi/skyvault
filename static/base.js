@@ -11,6 +11,11 @@ const SkyVault = {
   applySavedTheme() {
     const saved = localStorage.getItem("skyvault-theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   },
 
   bindThemeToggle() {
@@ -20,10 +25,16 @@ const SkyVault = {
       const current = document.documentElement.getAttribute("data-theme");
       const next = current === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
+      if (next === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
       localStorage.setItem("skyvault-theme", next);
       this.showToast(`Switched to ${next} mode`, "info");
     });
   },
+
 
   toggleSidebar() {
     document.getElementById("sidebar")?.classList.toggle("collapsed");
@@ -88,6 +99,71 @@ const SkyVault = {
     }
   },
 
+  // Upload Confirmation Modal methods
+  openUploadConfirmModal(data) {
+    const modal = document.getElementById("upload-confirm-modal");
+    const folderIdInput = document.getElementById("upload-confirm-folder-id");
+    const fileIdInput = document.getElementById("upload-confirm-file-id");
+    const fileNameInput = document.getElementById("upload-confirm-file-name");
+    const suggestedCategoryEl = document.getElementById("upload-confirm-suggested-category");
+
+    if (!modal) return;
+
+    if (folderIdInput) folderIdInput.value = data.folder_id || "";
+    if (fileIdInput) fileIdInput.value = data.file_id || "";
+    if (fileNameInput) fileNameInput.value = data.file_name || "";
+    if (suggestedCategoryEl) suggestedCategoryEl.textContent = data.category || "General";
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => fileNameInput?.focus(), 100);
+  },
+
+  closeUploadConfirmModal(reload = true) {
+    const modal = document.getElementById("upload-confirm-modal");
+    if (modal) {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+    if (reload) {
+      setTimeout(() => location.reload(), 300);
+    }
+  },
+
+  async submitUploadConfirm(event) {
+    if (event) event.preventDefault();
+
+    const folderId = document.getElementById("upload-confirm-folder-id")?.value;
+    const fileId = document.getElementById("upload-confirm-file-id")?.value;
+    const fileName = document.getElementById("upload-confirm-file-name")?.value;
+
+    try {
+      const res = await fetch("/vault/confirm-upload-details/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": this.getCsrfToken(),
+        },
+        body: JSON.stringify({
+          folder_id: folderId,
+          file_id: fileId,
+          file_name: fileName,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(data.message || "Upload details confirmed!", "success");
+        this.closeUploadConfirmModal(true);
+      } else {
+        this.showToast(data.error || "Failed to update upload details.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      this.showToast("Network error submitting confirmation.", "error");
+    }
+  },
+
   escapeHtml(str) {
     if (!str) return "";
     return String(str)
@@ -98,6 +174,20 @@ const SkyVault = {
       .replace(/'/g, "&#039;");
   },
 
+  // Render simple markdown: **bold**, *italic*, newlines → <br>, [n] citations
+  renderMarkdown(text) {
+    if (!text) return "";
+    return this.escapeHtml(text)
+      // **bold**
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      // *italic*
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      // [1][2] citation chips
+      .replace(/\[(\d+)\]/g, '<sup style="font-size:10px;opacity:.7;">[$1]</sup>')
+      // newlines
+      .replace(/\n/g, "<br>");
+  },
+
   // In-App File Preview Overlay Modal
   openPreviewModal(fileId) {
     const modal = document.getElementById("preview-modal");
@@ -105,12 +195,18 @@ const SkyVault = {
     const icon = document.getElementById("preview-icon");
     const body = document.getElementById("preview-body");
     const aiContent = document.getElementById("preview-ai-content");
+    const openBtn = document.getElementById("preview-open-btn");
+    const downloadBtn = document.getElementById("preview-download-btn");
 
     if (!modal) return;
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     body.innerHTML = '<div class="spinner-container"><span class="material-icons spinner">sync</span> Loading preview...</div>';
+
+    // Reset action buttons while loading
+    if (openBtn) openBtn.style.display = "none";
+    if (downloadBtn) downloadBtn.href = `/vault/download-file/${fileId}/`;
 
     fetch(`/vault/preview-file/${fileId}/`)
       .then((res) => res.json())
@@ -122,44 +218,89 @@ const SkyVault = {
 
         title.textContent = data.name;
         const ext = data.extension;
+        const fileUrl = data.url;
+        const downloadUrl = `/vault/download-file/${fileId}/`;
+
+        // Wire header action buttons
+        if (downloadBtn) {
+          downloadBtn.href = downloadUrl;
+          downloadBtn.setAttribute("download", data.name);
+        }
 
         if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
           icon.textContent = "image";
-          body.innerHTML = `<div class="image-preview-wrapper"><img src="${data.url}" alt="${data.name}" class="preview-img" style="max-width:100%;max-height:60vh;object-fit:contain;display:block;margin:0 auto;"></div>`;
+          // Images: show open button that launches the in-app viewer
+          if (openBtn) {
+            openBtn.style.display = "flex";
+            openBtn.onclick = (e) => { e.preventDefault(); this.openDocViewer(fileUrl, data.name, "image", downloadUrl); };
+          }
+          body.innerHTML = `<div class="image-preview-wrapper"><img src="${fileUrl}" alt="${data.name}" class="preview-img"></div>`;
         } else if (ext === "pdf") {
           icon.textContent = "picture_as_pdf";
+          if (openBtn) {
+            openBtn.style.display = "flex";
+            openBtn.onclick = (e) => { e.preventDefault(); this.openDocViewer(fileUrl, data.name, "pdf", downloadUrl); };
+          }
           body.innerHTML = `
-            <div class="pdf-preview-container" style="width:100%;height:60vh;border-radius:8px;overflow:hidden;">
-              <object data="${data.url}" type="application/pdf" style="width:100%;height:100%;">
-                <iframe src="${data.url}" style="width:100%;height:100%;border:none;">
-                  <div class="download-preview-box">
-                    <span class="material-icons big-icon">picture_as_pdf</span>
-                    <p>PDF inline preview not supported directly by browser.</p>
-                    <a href="${data.url}" target="_blank" class="btn btn-primary">Open PDF in New Tab</a>
-                  </div>
-                </iframe>
-              </object>
+            <div class="pdf-preview-container">
+              <iframe src="${fileUrl}" class="pdf-inline-frame" title="${this.escapeHtml(data.name)}"></iframe>
             </div>`;
         } else if (["txt", "md", "json", "py", "js", "html", "css"].includes(ext)) {
           icon.textContent = "description";
-          body.innerHTML = `<pre class="preview-code" style="max-height:60vh;overflow:auto;padding:16px;background:var(--bg-primary);border-radius:8px;font-family:monospace;white-space:pre-wrap;word-break:break-word;">${this.escapeHtml(data.text_content || "")}</pre>`;
+          if (openBtn) {
+            openBtn.style.display = "flex";
+            openBtn.onclick = (e) => { e.preventDefault(); this.openDocViewer(fileUrl, data.name, "text", downloadUrl); };
+          }
+          body.innerHTML = `<pre class="preview-code skyvault-scroll">${this.escapeHtml(data.text_content || "")}</pre>`;
         } else {
           icon.textContent = "insert_drive_file";
+          if (openBtn) openBtn.style.display = "none";
           body.innerHTML = `
             <div class="download-preview-box">
               <span class="material-icons big-icon">insert_drive_file</span>
               <p>No inline preview available for .${ext} files.</p>
-              <a href="${data.url}" download="${data.name}" class="btn btn-primary">Download File</a>
+              <a href="${downloadUrl}" download="${data.name}" class="btn btn-primary">Download File</a>
             </div>`;
         }
 
-        // Render AI analysis slot based on processing status
+        // Render AI analysis slot
         aiContent.innerHTML = this.renderAiAnalysis(data.ai_analysis);
       })
       .catch((err) => {
         console.error("Preview error:", err);
         body.innerHTML = `<p class="error-msg">Error loading file preview.</p>`;
       });
+  },
+
+  openDocViewer(fileUrl, fileName, fileType, downloadUrl) {
+    const viewerModal = document.getElementById("doc-viewer-modal");
+    const iframe = document.getElementById("doc-viewer-iframe");
+    const titleEl = document.getElementById("doc-viewer-title");
+    const iconEl = document.getElementById("doc-viewer-icon");
+    const dlBtn = document.getElementById("doc-viewer-download-btn");
+
+    if (!viewerModal || !iframe) return;
+
+    titleEl.textContent = fileName;
+    iconEl.textContent = fileType === "pdf" ? "picture_as_pdf" : fileType === "image" ? "image" : "description";
+    if (dlBtn) { dlBtn.href = downloadUrl; dlBtn.setAttribute("download", fileName); }
+
+    iframe.src = "";
+    viewerModal.classList.add("open");
+    viewerModal.setAttribute("aria-hidden", "false");
+
+    // Small delay so the modal is visible before iframe starts loading
+    setTimeout(() => { iframe.src = fileUrl; }, 80);
+  },
+
+  closeDocViewer() {
+    const viewerModal = document.getElementById("doc-viewer-modal");
+    const iframe = document.getElementById("doc-viewer-iframe");
+    if (viewerModal) {
+      viewerModal.classList.remove("open");
+      viewerModal.setAttribute("aria-hidden", "true");
+    }
+    if (iframe) iframe.src = "";
   },
 
   closePreviewModal() {
@@ -183,13 +324,14 @@ const SkyVault = {
         .map((t) => `<span class="chip">#${this.escapeHtml(t)}</span>`)
         .join(" ");
       const folder = ai.suggested_folder
-        ? `<p class="ai-suggested-folder"><span class="material-icons">folder_open</span> Suggested folder: <strong>${this.escapeHtml(ai.suggested_folder)}</strong></p>`
+        ? `<p class="flex items-center gap-1.5 mt-3 text-xs text-[var(--text-primary)]"><span class="material-icons text-base text-[var(--accent-color)] shrink-0">folder_open</span> Suggested folder: <strong class="font-semibold">${this.escapeHtml(ai.suggested_folder)}</strong></p>`
         : "";
       return `
-        <p><strong>Summary:</strong> ${this.escapeHtml(ai.summary || "")}</p>
-        <div class="tag-chips">${chips}</div>
+        <p class="text-xs leading-relaxed text-[var(--text-primary)]"><strong>Summary:</strong> ${this.escapeHtml(ai.summary || "")}</p>
+        <div class="flex flex-wrap gap-1.5 my-3">${chips}</div>
         ${folder}`;
     }
+
 
     if (status === "pending" || status === "processing") {
       return `<p class="ai-placeholder-text"><span class="material-icons spinner">sync</span> Analyzing document… tags and summary will appear here shortly.</p>`;
@@ -211,9 +353,110 @@ const SkyVault = {
     this.openRagModal();
   },
 
+  openPreviewFromRag(fileId) {
+    // Open preview overlay in front (z-index: 3000) without closing RAG chat modal behind it
+    this.openPreviewModal(fileId);
+  },
+
+  isChitchatQuery(query) {
+    const chitchatSet = new Set([
+      "hi", "hello", "hey", "heya", "greetings", "good morning", "good afternoon", "good evening",
+      "how are you", "how are you doing", "whats up", "what's up", "who are you", "what are you",
+      "what can you do", "who created you", "thanks", "thank you", "thx", "bye", "goodbye",
+      "cool", "awesome", "great", "ok", "okay", "help", "im doing great", "i am doing great",
+      "doing good", "doing great", "fine", "good"
+    ]);
+    const cleaned = (query || "").toLowerCase().replace(/[^\w\s]/g, "").trim();
+    if (chitchatSet.has(cleaned)) return true;
+    const words = cleaned.split(/\s+/);
+    return words.length <= 4 && words.some(w => chitchatSet.has(w));
+  },
+
+  getRagHistoryKey() {
+    return "skyvault_rag_chat_history";
+  },
+
+  loadRagHistory() {
+    const chatBody = document.getElementById("rag-chat-body");
+    if (!chatBody) return;
+
+    try {
+      const raw = localStorage.getItem(this.getRagHistoryKey());
+      if (!raw) return;
+      const history = JSON.parse(raw);
+      if (!Array.isArray(history) || history.length === 0) return;
+
+      // Keep default system welcome message, append saved messages
+      history.forEach((msg) => {
+        if (msg.role === "user") {
+          const userMsg = document.createElement("div");
+          userMsg.className = "rag-message user-msg";
+          userMsg.textContent = msg.text || "";
+          chatBody.appendChild(userMsg);
+        } else if (msg.role === "ai") {
+          const aiMsg = document.createElement("div");
+          aiMsg.className = "rag-message ai-msg";
+
+          let sourcesHtml = "";
+          if (msg.sources && msg.sources.length > 0) {
+            sourcesHtml = `<div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color); font-size:12px; color:var(--text-secondary);">
+              <strong>Cited Sources:</strong>
+              <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                ${msg.sources.map(s => `<span onclick="SkyVault.openPreviewFromRag(${s.id})" class="chip" style="cursor:pointer;"><span class="material-icons" style="font-size:12px; vertical-align:middle;">description</span> ${this.escapeHtml(s.name)}</span>`).join("")}
+              </div>
+            </div>`;
+          }
+
+          aiMsg.innerHTML = `
+            <span class="material-icons"></span>
+            <div style="flex:1;">
+              <p style="margin:0; font-size:14px; line-height:1.6;">${this.renderMarkdown(msg.answer || "")}</p>
+              ${sourcesHtml}
+            </div>`;
+          chatBody.appendChild(aiMsg);
+        }
+      });
+      chatBody.scrollTop = chatBody.scrollHeight;
+    } catch (e) {
+      console.warn("Failed to load RAG chat history:", e);
+    }
+  },
+
+  saveRagMessage(item) {
+    try {
+      const raw = localStorage.getItem(this.getRagHistoryKey());
+      const history = raw ? JSON.parse(raw) : [];
+      history.push(item);
+      if (history.length > 50) history.shift();
+      localStorage.setItem(this.getRagHistoryKey(), JSON.stringify(history));
+    } catch (e) {
+      console.warn("Failed to save RAG chat message:", e);
+    }
+  },
+
+  clearRagHistory() {
+    localStorage.removeItem(this.getRagHistoryKey());
+    const chatBody = document.getElementById("rag-chat-body");
+    if (chatBody) {
+      chatBody.innerHTML = `
+        <div class="rag-message system-msg">
+            <span class="material-icons">auto_awesome</span>
+            <div>
+                <p style="font-weight:600;">Hi! I'm SkyVault AI.</p>
+                <p class="subtext">Ask me any question about your documents, invoices, or notes. I'll search your vector embeddings and cite the exact source files.</p>
+            </div>
+        </div>`;
+    }
+    this.showToast("Chat history cleared", "info");
+  },
+
   openRagModal() {
     const modal = document.getElementById("rag-chat-modal");
     if (modal) {
+      if (!this._ragHistoryLoaded) {
+        this.loadRagHistory();
+        this._ragHistoryLoaded = true;
+      }
       modal.classList.add("open");
       modal.setAttribute("aria-hidden", "false");
       const input = document.getElementById("rag-input");
@@ -234,9 +477,6 @@ const SkyVault = {
     const chatBody = document.getElementById("rag-chat-body");
     if (!input || !chatBody) return;
 
-    // One question at a time. Without this, a second submit during the (often
-    // multi-second) first request leaves an orphaned loading bubble that no
-    // response ever clears.
     if (this._ragInFlight) return;
 
     const query = input.value.trim();
@@ -245,20 +485,32 @@ const SkyVault = {
     // Append user question message
     const userMsg = document.createElement("div");
     userMsg.className = "rag-message user-msg";
-    userMsg.style.cssText = "display:flex; justify-content:flex-end;";
-    userMsg.innerHTML = `<div style="background:var(--primary-color, #1a73e8); color:#fff; padding:10px 16px; border-radius:18px; max-width:80%; font-size:14px;">${this.escapeHtml(query)}</div>`;
+    userMsg.textContent = query;
     chatBody.appendChild(userMsg);
+    this.saveRagMessage({ role: "user", text: query });
 
     input.value = "";
     chatBody.scrollTop = chatBody.scrollHeight;
 
     this._setRagBusy(true);
 
-    // Append loading spinner placeholder
+    // Append loading placeholder — text adapts to chitchat vs document queries
+    const isChitchat = this.isChitchatQuery(query);
+    const thinkingText = isChitchat ? "Thinking" : "Searching your files";
     const loadingMsg = document.createElement("div");
-    loadingMsg.className = "rag-message ai-msg loading-msg";
-    loadingMsg.style.cssText = "display:flex; gap:12px; background:var(--bg-hover, #f8f9fa); padding:12px 16px; border-radius:8px;";
-    loadingMsg.innerHTML = `<span class="material-icons spinner" style="color:var(--primary-color,#1a73e8);">sync</span><p style="margin:0; font-size:14px; color:var(--text-muted);">Searching vector embeddings & generating answer...</p>`;
+    loadingMsg.className = "rag-message-row";
+    loadingMsg.innerHTML = `
+      <div class="rag-message ai-msg loading-msg">
+        <div class="ai-thinking-wrapper">
+          <span class="material-icons ai-sparkle-pulse">auto_awesome</span>
+          <span>${thinkingText}</span>
+          <span class="thinking-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </div>
+      </div>`;
     chatBody.appendChild(loadingMsg);
     chatBody.scrollTop = chatBody.scrollHeight;
 
@@ -272,8 +524,6 @@ const SkyVault = {
     })
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
-        // Non-2xx (e.g. the 503 retrieval-unavailable path) carries an `error`
-        // string, not an answer — render it as an error, not as a real reply.
         if (!ok || data.error) {
           this._appendRagError(chatBody, data.error || "Failed to get AI answer. Please try again.");
           return;
@@ -281,36 +531,33 @@ const SkyVault = {
 
         const aiMsg = document.createElement("div");
         aiMsg.className = "rag-message ai-msg";
-        aiMsg.style.cssText = "display:flex; gap:12px; background:var(--bg-hover, #f8f9fa); padding:14px 16px; border-radius:8px;";
 
         let sourcesHtml = "";
         if (data.sources && data.sources.length > 0) {
-          sourcesHtml = `<div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color, #dadce0); font-size:12px; color:var(--text-secondary);">
-            <strong>Cited Sources:</strong>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
-              ${data.sources.map(s => `<span onclick="SkyVault.openPreviewModal(${s.id})" style="cursor:pointer; background:var(--primary-light, #e8f0fe); color:var(--primary-color, #1a73e8); padding:3px 8px; border-radius:12px; font-weight:500;"><span class="material-icons" style="font-size:12px; vertical-align:middle;">description</span> ${this.escapeHtml(s.name)}</span>`).join("")}
+          sourcesHtml = `<div class="mt-3 pt-2.5 border-t border-[var(--border-color)] text-xs text-[var(--text-secondary)]">
+            <strong class="font-semibold text-[var(--text-primary)]">Cited Sources:</strong>
+            <div class="flex gap-1.5 flex-wrap mt-1.5">
+              ${data.sources.map(s => `<span onclick="SkyVault.openPreviewFromRag(${s.id})" class="chip cursor-pointer hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] transition-colors"><span class="material-icons text-xs align-middle">description</span> ${this.escapeHtml(s.name)}</span>`).join("")}
             </div>
           </div>`;
         }
 
         aiMsg.innerHTML = `
-          <span class="material-icons" style="color:var(--primary-color, #1a73e8);">auto_awesome</span>
-          <div style="flex:1;">
-            <p style="margin:0; font-size:14px; line-height:1.5; white-space:pre-wrap;">${this.escapeHtml(data.answer || "")}</p>
+          <span class="material-icons text-[var(--accent-color)] shrink-0 mt-0.5">auto_awesome</span>
+          <div class="flex-1 min-w-0">
+            <p class="m-0 text-sm leading-relaxed text-[var(--text-primary)]">${this.renderMarkdown(data.answer || "")}</p>
             ${sourcesHtml}
           </div>`;
-
         chatBody.appendChild(aiMsg);
         chatBody.scrollTop = chatBody.scrollHeight;
+        this.saveRagMessage({ role: "ai", answer: data.answer, sources: data.sources });
       })
       .catch((err) => {
         console.error("RAG Error:", err);
         this._appendRagError(chatBody, "Failed to get AI answer. Please try again.");
       })
       .finally(() => {
-        // Sweep by class, not by captured node: idempotent, clears any orphan
-        // left by an earlier request, and .remove() never throws.
-        chatBody.querySelectorAll(".loading-msg").forEach((n) => n.remove());
+        chatBody.querySelectorAll(".rag-message-row").forEach((n) => n.remove());
         chatBody.scrollTop = chatBody.scrollHeight;
         this._setRagBusy(false);
       });
