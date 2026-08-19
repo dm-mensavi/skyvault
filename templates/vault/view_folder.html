@@ -3,10 +3,10 @@
 {% load custom_filters %}
 
 {% block title %}{{ folder.name }} - SkyVault{% endblock %}
-{% block extra_js %}<script src="{% static 'vault/vault.js' %}?v=8"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'vault/vault.js' %}?v=9"></script>{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" data-folder-id="{{ folder.id }}">
     <div class="header-title">
         <nav class="breadcrumb" aria-label="breadcrumb">
             <a href="{% url 'vault_home' %}" class="breadcrumb-link"><span class="material-icons">folder</span> My Drive</a>

@@ -526,9 +526,9 @@ def paste(request):
 
         logger.debug("Paste action received: item_id=%s type=%s action=%s", item_id, item_type, action)
 
-        # Get the target folder
-        if target_folder_id:
-            target_folder = get_object_or_404(Folder, id=target_folder_id, user=request.user)
+        # Get the target folder safely (handling null, undefined, empty string, or numeric ID)
+        if target_folder_id and str(target_folder_id).lower() not in ("null", "undefined", "none", ""):
+            target_folder = get_object_or_404(Folder, id=int(target_folder_id), user=request.user)
         else:
             target_folder = None  # Root folder
 
@@ -548,7 +548,7 @@ def paste(request):
                     size=item.size,
                     trashed=item.trashed,
                     starred=item.starred,
-                    # Copy other necessary fields
+                    category=target_folder.category if target_folder and target_folder.category else item.category
                 )
                 new_file.uploaded_file.save(item.uploaded_file.name, ContentFile(file_content))
                 new_file.save()
@@ -558,6 +558,10 @@ def paste(request):
             elif action == "cut":
                 # Move the file to the target folder
                 item.folder = target_folder
+                if target_folder and target_folder.category:
+                    item.category = target_folder.category
+                elif not target_folder:
+                    item.category = "General"
                 item.save()
                 logger.info("File id=%s moved to folder id=%s", item.id, getattr(target_folder, 'id', 'root'))
                 message = "File moved successfully!"

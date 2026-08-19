@@ -164,7 +164,13 @@ const SkyVaultDrive = (() => {
 
     mainPanel.addEventListener('contextmenu', (e) => {
       const card = e.target.closest('.drive-card');
-      if (!card) return; // let base.js global handler deal with empty space
+      if (!card) {
+        // Reset item selection so background right-click paste targets current page folder
+        selectedItemId   = null;
+        selectedItemType = null;
+        selectedItemName = '';
+        return; // let base.js global handler deal with empty space
+      }
       e.preventDefault();
       e.stopPropagation();
 
