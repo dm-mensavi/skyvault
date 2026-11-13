@@ -19,9 +19,11 @@ SkyVault is a file management and storage application that brings cloud-like fun
 
 ## 🛠️ **Getting Started**
 
-SkyVault requires **PostgreSQL** (with the `pgvector` extension for upcoming AI features). You can run Postgres via Docker or install it locally.
+SkyVault uses **PostgreSQL** with the `pgvector` extension for its semantic-search and RAG features. You can run Postgres via Docker or install it locally.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the full AI implementation plan.
+For a code-based architecture, methodology, limitations, and presentation
+preparation, see the [Project Defense Guide](docs/PROJECT_DEFENSE.md).
 
 ### Option 1: Run with Docker (recommended)
 
@@ -35,7 +37,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full AI implementation plan.
    ```bash
    docker-compose exec web-skyvault python manage.py createsuperuser
    ```
-4. Access the application at [http://localhost:8000](http://localhost:8000) or [http://127.0.0.1:8000](http://127.0.0.1:8000).
+4. Access the application at [http://localhost:8001](http://localhost:8001) or [http://127.0.0.1:8001](http://127.0.0.1:8001).
 
 > **Note:** The pgvector init script runs only on a **fresh** database volume. If you previously ran SkyVault with plain Postgres, reset the volume first:
 > ```bash

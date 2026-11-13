@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import time
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,35 @@ def _extract_text(response) -> str:
     return "".join(getattr(block, "text", "") for block in response.content)
 
 
+def _log_empty_response(provider: str, requested_model: str, response, duration_ms: int) -> None:
+    content = getattr(response, "content", None) or []
+    blocks = content if isinstance(content, (list, tuple)) else []
+    block_types = [
+        getattr(block, "type", type(block).__name__)
+        for block in blocks
+    ]
+    text_chars = sum(
+        len(text)
+        for text in (getattr(block, "text", "") for block in blocks)
+        if isinstance(text, str)
+    )
+    usage = getattr(response, "usage", None)
+    logger.warning(
+        "%s generation returned no text: requested_model=%s response_model=%s "
+        "stop_reason=%s content_block_types=%s text_chars=%d output_tokens=%s "
+        "response_id=%s duration_ms=%d",
+        provider,
+        requested_model,
+        getattr(response, "model", None) or "unknown",
+        getattr(response, "stop_reason", None) or "unknown",
+        block_types,
+        text_chars,
+        getattr(usage, "output_tokens", None),
+        getattr(response, "id", None),
+        duration_ms,
+    )
+
+
 def clean_json_string(raw: str) -> str:
     """
     Extracts JSON substring from raw model output (handles ```json code blocks).
@@ -79,13 +109,19 @@ def generate_text(system_prompt: str, user_content: str, max_tokens: int = 1000)
     if client:
         model = getattr(settings, "AI_CLAUDE_MODEL", "claude-opus-5")
         try:
+            started = time.monotonic()
             response = client.messages.create(
                 model=model,
                 max_tokens=max_tokens,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_content}]
             )
-            return _extract_text(response)
+            text = _extract_text(response)
+            if not text.strip():
+                _log_empty_response(
+                    "Primary", model, response, round((time.monotonic() - started) * 1000)
+                )
+            return text
         except Exception as e:
             logger.error(f"Primary generation call failed ({model}): {e}")
     else:
@@ -108,13 +144,19 @@ def _generate_text_fallback(system_prompt: str, user_content: str, max_tokens: i
         return ""
 
     try:
+        started = time.monotonic()
         response = client.messages.create(
             model=model,
             max_tokens=max_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": user_content}]
         )
-        return _extract_text(response)
+        text = _extract_text(response)
+        if not text.strip():
+            _log_empty_response(
+                "Fallback", model, response, round((time.monotonic() - started) * 1000)
+            )
+        return text
     except Exception as e:
         logger.error(f"Fallback generation call failed ({model}): {e}")
         return ""

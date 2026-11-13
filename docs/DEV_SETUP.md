@@ -33,7 +33,7 @@ docker-compose up --build -d
 ```
 This starts:
 - `db-skyvault`: PostgreSQL 16 with `pgvector` extension pre-initialized
-- `web-skyvault`: Django application server on `http://localhost:8000`
+- `web-skyvault`: Django application server on `http://localhost:8001` (host port 8001 maps to container port 8000)
 - `qcluster`: Django-Q2 background worker cluster
 
 ### Step 4: Apply Database Migrations
@@ -46,7 +46,7 @@ docker-compose exec web-skyvault python manage.py migrate
 docker-compose exec web-skyvault python manage.py createsuperuser
 ```
 
-Now open **http://localhost:8000** in your browser!
+Now open **http://localhost:8001** in your browser!
 
 ---
 

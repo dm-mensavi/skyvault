@@ -4,7 +4,7 @@ services:
     image: skyvault:latest
     pull_policy: build
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
       - hf_cache:/root/.cache/huggingface
@@ -58,6 +58,8 @@ services:
 
   db-skyvault:
     image: pgvector/pgvector:pg16
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql

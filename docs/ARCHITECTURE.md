@@ -29,7 +29,7 @@ graph TD
                 CLAUDE["claude.py (Anthropic client)"]
                 EMBED["embeddings.py (sentence-transformers, local)"]
                 SEARCH["search.py (pgvector retrieval)"]
-                INSIGHT["insights.py (storage stats + Claude)"]
+                INSIGHT["insights.py (storage stats + configured LLM)"]
             end
 
             subgraph Models["Models"]
@@ -62,7 +62,7 @@ graph TD
     end
 
     subgraph External["External APIs"]
-        ANTH["Anthropic Claude"]
+        ANTH["Anthropic-compatible generation API"]
     end
 
     UI --> VF
@@ -93,18 +93,18 @@ graph TD
 
 ## RAG Pipeline Walkthrough
 
-1. **Upload**: User uploads a `.pdf` file. Non-PDF uploads are rejected. The `File` record is created, and a `post_save` signal fires.
+1. **Upload**: An authenticated user uploads a file. Audio and video are rejected, but there is no general extension allowlist. The `File` record is created, and a `post_save` signal fires.
 
 2. **Signal → Task**: The signal enqueues `ai_features.tasks.analyze_file(file_id)` via django-q2 (async background task).
 
 3. **Text Extraction & Page Sampling**: `analyze_file` calls `extract_text()` which dispatches to the appropriate extractor:
-   - **PDF** (`.pdf`): `pdf.py` via pdfplumber. If the PDF has more than 10 pages, only the first 5 and last 5 pages are extracted to respect token limits.
+   - **PDF** (`.pdf`): `pdf.py` via pdfplumber. If the PDF has more than 10 pages, only the first 5 and last 5 pages are extracted; middle pages are not indexed. Scanned PDF pages are not OCR'd by this path.
    - **Word Documents** (`.docx`, `.doc`): `docx.py` via python-docx; extracts all paragraphs and table cells.
-   - **Images** (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`): `image.py` via pytesseract OCR; enables extraction of text from scanned documents and screenshots.
+   - **Images** (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`): `image.py` implements pytesseract OCR, but image extensions are not currently in the upload signal's AI-processing allowlist, so they are marked `SKIPPED` instead of being analyzed asynchronously.
    - **Plaintext** (`.txt`, `.md`, `.json`, `.py`, `.js`, `.html`, `.css`, `.csv`, `.xml`): `plaintext.py` with encoding fallbacks (utf-8, latin-1, cp1252).
    - **Audio / Video**: Blocked at upload (views.py + forms.py) and never reach the extraction layer.
 
-4. **AI Analysis**: The extracted text (truncated to 8000 chars) is sent to Anthropic Claude with a structured JSON prompt. Claude returns:
+4. **AI Analysis**: For queued file types, up to 4000 characters of extracted text are sent to the configured model through an Anthropic-compatible Messages API with a structured JSON prompt. The model is asked to return:
    - `summary`: 2-3 sentence summary
    - `tags`: 3-7 lowercase tags
    - `suggested_folder`: a folder name
@@ -118,10 +118,10 @@ graph TD
    - Top-k chunks are deduplicated back to files and returned with relevance scores
 
 7. **RAG Q&A** (`/vault/ask/`):
-   - Retrieve top-5 relevant chunks (same as search)
+   - Retrieve up to five chunks using pgvector cosine distance; discard chunks below the current 0.35 similarity threshold
    - Build a context block with file citations `[1] filename.pdf: "...chunk..."`
-   - Send the context + user question to Claude
-   - Claude generates an answer citing the source files
+   - Send the context + user question to the configured generation model
+   - Return the generated answer and source files whose numeric citation markers are present in that answer
 
 ## Chunking Strategy
 
@@ -148,11 +148,11 @@ Fixed-size splits (e.g., every 500 characters) break mid-sentence and mid-code-b
 | Embedding model | `all-MiniLM-L6-v2` | Runs locally via sentence-transformers; free, no API key, no per-query cost |
 | Dimensions | 384 | Matches the model default; smaller index than 1536-dim alternatives |
 | Vector store | pgvector (PostgreSQL) | Already on the same database; no additional infrastructure |
-| Index type | HNSW (Cosine) | Best recall/speed tradeoff for pgvector; supported natively |
+| Index type | HNSW (Cosine) | Approximate nearest-neighbor index; trades index/storage overhead for fast vector lookup. Retrieval quality must be measured on a relevant corpus. |
 
 ## Evaluation Results
 
-Benchmark queries are stored in `ai_features/eval/queries.json`. Recall@k is computed by checking whether expected files appear in the top-k results.
+Benchmark queries are stored in `ai_features/eval/queries.json`. The current command checks whether expected keywords appear in retrieved filenames, so this is a rough sanity check rather than a human-judged semantic relevance benchmark. The existing `docs/EVAL_RESULTS.md` explicitly marks its recorded score invalid because the embedding model was misconfigured during that run; do not cite it as a valid result.
 
 Run baseline: `python manage.py run_search_eval`
 

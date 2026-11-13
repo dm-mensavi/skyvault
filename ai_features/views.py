@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import time
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -69,8 +70,14 @@ def ask_vault(request):
     if is_chitchat_query(query):
         raw_chunks = []
     else:
+        retrieval_started = time.monotonic()
         try:
             raw_chunks = search_chunks(request.user, query, top_k=5)
+            logger.info(
+                "ask_vault retrieval completed in %dms with %d chunks.",
+                round((time.monotonic() - retrieval_started) * 1000),
+                len(raw_chunks),
+            )
         except RetrievalUnavailable as e:
             logger.error(f"Semantic retrieval unavailable for ask_vault: {e}")
             return JsonResponse({
@@ -110,20 +117,24 @@ def ask_vault(request):
 
     # 2. Synthesize the answer (primary model, with fallback)
     try:
-        # Use concise token limits for fast responses. RAG: 200 tokens, chitchat: 100.
-        token_limit = 200 if chunks else 100
+        # Reasoning models need enough output budget to produce visible text.
+        token_limit = 1000
+        generation_started = time.monotonic()
         answer = generate_text(system_prompt, user_prompt, max_tokens=token_limit)
+        logger.info(
+            "ask_vault generation completed in %dms with %d response characters.",
+            round((time.monotonic() - generation_started) * 1000),
+            len(answer),
+        )
         if not answer:
-            if sources:
-                return JsonResponse({
-                    "answer": f"Found {len(sources)} relevant document(s), but no AI generation model is configured to synthesize an answer. Please set ANTHROPIC_AUTH_TOKEN in your environment.",
-                    "sources": sources
-                })
-            else:
-                return JsonResponse({
-                    "answer": "Hello! I'm SkyVault AI, your personal cloud assistant. How can I help you with your files today?",
-                    "sources": []
-                })
+            logger.error("AI generation returned no text for ask_vault.")
+            return JsonResponse({
+                "error": (
+                    "I couldn't get a response from the AI service. Check the generation "
+                    "credentials and model settings, then inspect 'docker-compose logs "
+                    "web-skyvault' for provider errors."
+                ),
+            }, status=503)
 
 
         # Strict Citation Filter: Only include sources that were ACTUALLY cited in the AI answer text (e.g. [1], [2]).

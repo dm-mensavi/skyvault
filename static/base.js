@@ -2,6 +2,9 @@
  * SkyVault base utilities: Google Drive theme, global context menus, modals, preview overlays, trash actions, toasts
  */
 const SkyVault = {
+  _previewAnalysisPollTimeout: null,
+  _previewAnalysisSession: 0,
+
   init() {
     this.applySavedTheme();
     this.bindThemeToggle();
@@ -200,6 +203,10 @@ const SkyVault = {
 
     if (!modal) return;
 
+    clearTimeout(this._previewAnalysisPollTimeout);
+    this._previewAnalysisPollTimeout = null;
+    const previewSession = ++this._previewAnalysisSession;
+
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     body.innerHTML = '<div class="spinner-container"><span class="material-icons spinner">sync</span> Loading preview...</div>';
@@ -208,9 +215,10 @@ const SkyVault = {
     if (openBtn) openBtn.style.display = "none";
     if (downloadBtn) downloadBtn.href = `/vault/download-file/${fileId}/`;
 
-    fetch(`/vault/preview-file/${fileId}/`)
+    fetch(`/vault/preview-file/${fileId}/`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
+        if (previewSession !== this._previewAnalysisSession || !modal.classList.contains("open")) return;
         if (!data.success) {
           body.innerHTML = `<p class="error-msg">Unable to load preview.</p>`;
           return;
@@ -265,11 +273,44 @@ const SkyVault = {
 
         // Render AI analysis slot
         aiContent.innerHTML = this.renderAiAnalysis(data.ai_analysis);
+        if (["pending", "processing"].includes(data.ai_analysis?.status)) {
+          this._schedulePreviewAnalysisPoll(fileId, previewSession);
+        }
       })
       .catch((err) => {
+        if (previewSession !== this._previewAnalysisSession) return;
         console.error("Preview error:", err);
         body.innerHTML = `<p class="error-msg">Error loading file preview.</p>`;
       });
+  },
+
+  _schedulePreviewAnalysisPoll(fileId, previewSession, delay = 2000) {
+    clearTimeout(this._previewAnalysisPollTimeout);
+    this._previewAnalysisPollTimeout = setTimeout(async () => {
+      const modal = document.getElementById("preview-modal");
+      if (previewSession !== this._previewAnalysisSession || !modal?.classList.contains("open")) return;
+
+      try {
+        const response = await fetch(`/vault/preview-file/${fileId}/`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Preview refresh failed with status ${response.status}`);
+        const data = await response.json();
+        if (previewSession !== this._previewAnalysisSession || !modal.classList.contains("open")) return;
+        if (!data.success) throw new Error("Preview refresh returned an unsuccessful response");
+
+        const aiContent = document.getElementById("preview-ai-content");
+        if (aiContent) aiContent.innerHTML = this.renderAiAnalysis(data.ai_analysis);
+
+        if (["pending", "processing"].includes(data.ai_analysis?.status)) {
+          this._schedulePreviewAnalysisPoll(fileId, previewSession);
+        } else {
+          this._previewAnalysisPollTimeout = null;
+        }
+      } catch (err) {
+        if (previewSession !== this._previewAnalysisSession) return;
+        console.warn("AI analysis refresh failed; retrying:", err);
+        this._schedulePreviewAnalysisPoll(fileId, previewSession, Math.min(delay * 2, 10000));
+      }
+    }, delay);
   },
 
   openDocViewer(fileUrl, fileName, fileType, downloadUrl) {
@@ -305,6 +346,9 @@ const SkyVault = {
 
   closePreviewModal() {
     const modal = document.getElementById("preview-modal");
+    clearTimeout(this._previewAnalysisPollTimeout);
+    this._previewAnalysisPollTimeout = null;
+    this._previewAnalysisSession += 1;
     if (modal) {
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
